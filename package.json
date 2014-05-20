@@ -1,0 +1,18 @@
+{
+  "name": "proto",
+  "version": "0.0.0",
+  "description": "",
+  "main": "index.js",
+  "dependencies": {
+    "cli-color": "^0.3.2",
+    "csv2": "^0.1.1",
+    "through2": "^0.4.1",
+    "underscore": "^1.6.0"
+  },
+  "devDependencies": {},
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "",
+  "license": "ISC"
+}
