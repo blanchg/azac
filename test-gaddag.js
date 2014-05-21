@@ -18,7 +18,7 @@ function loadTxtLexicon(callback){
             lexicon += chunk.toString();
             var index = lexicon.lastIndexOf('\n');
             if (index != -1) {
-                var words = lexicon.substr(0,index).split('\r\n');
+                var words = lexicon.substr(0,index).split('\n');
                 totalWords += words.length;
                 lexicon = lexicon.substring(index + 1);
                 gaddag.addAll(words);
@@ -94,27 +94,54 @@ function Grid(newSize) {
     }
 
     this.wordH = function(row, col, word) {
-        var i = 0;
+        var i = row * this.size + col;
         var that = this;
         word.split('').forEach(function (letter) {
             // log("Have that: " + this);
-            var index = (row + i++) * this.size + col
-            this[index] = letter
+            this[i++] = letter;
         }, that);
         // this.print();
     }
 
     this.wordV = function(row, col, word) {
-        var i = row * this.size + col;
+        var i = 0;
         var that = this;
         word.split('').forEach(function (letter) {
             // log("Have that: " + this);
-            this[i++] = letter
+            var index = (row + i++) * this.size + col
+            this[index] = letter;
         }, that);
         // this.print();
     }
 
+    this.fits = function(row, col, horizontal, word) {
+    	if (horizontal) {
+    		return col + word.length <= this.size;
+    	} else {
+    		return row + word.length <= this.size;
+    	}
+        // var i = 0;
+        // var that = this;
+        // word.split('').forEach(function (letter) {
+        //     // log("Have that: " + this);
+        //     var index = (row + i++) * this.size + col
+        //     this[index] = letter;
+        // }, that);
+        // this.print();
+    }
+
+    this.rawCell = function(row, col) {
+    	if (row >= this.size || col >= this.size) {
+    		return null;
+    	}
+        var i = row * this.size + col;
+        return this[i];
+    }
+
     this.cell = function(row, col) {
+    	if (row >= this.size || col >= this.size) {
+    		return null;
+    	}
         var i = row * this.size + col;
         return ansiTrim(this[i]);
     }
@@ -169,7 +196,7 @@ var removeHookFromWord = function(hook, word, error) {
         error = true;
     var index = word.indexOf(hook);
     if (index == -1 && error) {
-        log("Error in word")
+        log("Error in word " + word)
         throw "Invalid move error: " + hook + " not in " + word + " index: " + index;
     }
     word = word.substring(0, index) + word.substring(index + 1);
@@ -182,24 +209,58 @@ function saveLexicon() {
     console.timeEnd('write');
     process();
 }
+
+function wordMultiplier(cell) {
+	switch(cell) {
+		case clc.bold('T'):
+			return 3;
+		case clc.bold('D'):
+			return 2;
+		default:
+			return 1;
+	} 
+}
+function letterMultiplier(cell) {
+	switch(cell) {
+		case clc.bold('t'):
+			return 3;
+		case clc.bold('d'):
+			return 2;
+		default:
+			return 1;
+	} 
+}
+
 function scoreLetters(letters, row, col, horizontal) {
     if (horizontal === undefined)
         horizontal = true;
 
     if (!letters || letters.length == 0)
         return 0;
-    var score = 0;
-    letters.forEach(function(letter) {
-        score += scores[alphabet.indexOf(letter)];
+    var totalScore = 0;
+    letters.forEach(function(letter, i) {
+    	var score = scores[alphabet.indexOf(letter)];
+    	var multiplier = 1;
+    	if (row != undefined && col != undefined) {
+    		var cell = grid.rawCell(horizontal?row + i:row, horizontal?col:col+i);
+    		if (cell === null)
+    			return -1;
+    		score *= letterMultiplier(cell);
+    		multiplier *= wordMultiplier(cell);
+    	}
+        totalScore += score * multiplier;
     });
-    return score;
+    return totalScore;
 }
-function score(word, rack) {
+function score(word, rack, row, col, horizontal) {
     var score = 0;
     if (rack.length == 0) {
         score += 50;
     }
-    score += scoreLetters(word.split(''));
+    var letterScore = scoreLetters(word.split(''), row, col, horizontal);
+    if (letterScore < 0)
+    	return -1;
+    score += letterScore;
     return score;
 }
 
@@ -214,12 +275,17 @@ function process() {
     var totalScore = 0;
     var foundWords = [];
     var hookLetters = [''];
-    grid.wordH(2, 2, 'hello');
-    grid.wordV(2, 2, 'hello');
-    grid.print();
+    // grid.wordH(2, 2, 'hello');
+    // grid.wordV(2, 2, 'hello');
+    // grid.print();
 
-    log("0,0: " + (grid.cell(0,0) == 'T'));
-    // board.print();
+    log("prefix: " + gaddag.findWordsWithRackAndHook('train'.split(''), 'ing').join(','));
+
+    // log("0,0: " + (board.cell(0,0) == 'T'));
+    grid.print();
+    var row = 7;
+    var col = 3;
+    var horizontal = true;
     while (bag.length > 0 || rack.length > 0)
     {
         fillRack();
@@ -228,8 +294,11 @@ function process() {
         var wordHook = null;
         var longest = 0;
         var wordReplacements = null;
+        var wordRow = 0;
+        var wordCol = 0;
+        var wordHorizontal = true;
+
         hookLetters.forEach(function (hook) {
-            // log("Hook: " + hook);
 
             function processRack(rack, replacements) {
                 var index = rack.indexOf('?');
@@ -251,18 +320,31 @@ function process() {
                     return;
 
                 candidates.forEach(function(item){
+                	if (!grid.fits(row,col,horizontal,item))
+                		return;
+
                     var tempItem = '' + item;
                     replacements.forEach(function (letter) { tempItem = removeHookFromWord(letter, tempItem, false) });
-                    var itemScore = scoreLetters(tempItem.split(''));
-                    if (itemScore > longest) {
+                    var itemScore = scoreLetters(tempItem.split(''), row, col, horizontal);
+
+                    if (itemScore > 0 && itemScore > longest) {
                         wordReplacements = replacements;
                         wordHook = hook;
                         word = item;
+                        wordRow = row;
+                        wordCol = col;
+                        wordHorizontal = horizontal;
                         longest = itemScore;
                     }
                 }, this);
             }
             processRack(rack, []);
+
+            if (horizontal) {
+            	row++;
+            } else {
+            	col++;
+            }
         });
 
         if (!word || word.length == 0)
@@ -272,19 +354,32 @@ function process() {
         }
 
         var foundWord = word;
-        wordReplacements.forEach(function (letter) { word = removeHookFromWord(letter, word) });
+        wordReplacements.forEach(function (letter) { word = removeHookFromWord(letter, word, false) });
         var scoreWord = word;
         word = removeHookFromWord(wordHook, word);
         var wordRack = rack.slice(0).join('');
         removeFromRack(word, wordReplacements);
-        wordScore = score(scoreWord, rack);
-        if (wordHook)
+        wordScore = score(scoreWord, rack, wordRow, wordCol, wordHorizontal);
+        if (wordHook) {
             log(foundWord + " off letter " + wordHook + " using " + wordRack + " leftover letters " + rack.join("") + " scores " + wordScore);
-        else
+        } else {
             log(foundWord + " using " + wordRack + " leftover letters " + rack.join("") + " scores " + wordScore);
+        }
         totalScore += wordScore;
         foundWords.push(foundWord);
         hookLetters = word.split('');
+        if (wordHorizontal)
+        	grid.wordH(wordRow, wordCol, foundWord);
+        else
+        	grid.wordV(wordRow, wordCol, foundWord);
+        grid.print();
+
+
+        // Setup for next word
+		horizontal = !wordHorizontal;
+		row = wordRow;
+		col = wordCol;
+
         // log("Rack: " + rack.join(", "));
     }
     var bagScore = scoreLetters(bag);
@@ -299,6 +394,6 @@ if (!fs.existsSync('lexicon.js')) {
     loadTxtLexicon(saveLexicon);
 } else {
     log('loading the lexicon, this takes about 3 seconds');
-    // loadJsonLexicon(process);
-    process();
+    loadJsonLexicon(process);
+    // process();
 }

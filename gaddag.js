@@ -64,6 +64,46 @@ function Gaddag() {
         }
     }
 
+    this.findWordsWithSuffix = function (suffix) {
+        var trie = Gaddag.prototype.getTrie();
+        var starterNode = trie;
+        var words = [];
+
+        suffix.split('').reverse().some(function(letter) {
+            console.log(typeof starterNode);
+            if (typeof starterNode === 'undefined') return true;
+            starterNode = starterNode[letter];
+            return false;
+        })
+
+        if (typeof starterNode === 'undefined') return;
+
+        dig(suffix, starterNode, 'reverse');
+        return words;
+
+        function dig(word, cur, direction) {
+            for (var node in cur) {
+                var val = cur[ node ],
+                    ch = (node === separator || node === "$" ? '' : node);
+
+                if (val === 0) {
+                    words.push(word + ch);
+
+                } else {
+                    // nodes after this form the suffix
+                    if (node === separator) direction = 'forward';
+
+                    var part = (direction === 'reverse' ? ch + word : word + ch);
+                    dig(part, val, direction);
+
+                }
+
+                // done with the previous subtree, reset direction to indicate we are in the prefix part of next subtree
+                if (node === separator) direction = 'reverse';
+            }
+        }
+    }
+
     this.findWordsWithRackAndHook = function (rack, hook) {
         var trie = Gaddag.prototype.getTrie();
         var words = [];
@@ -82,22 +122,60 @@ function Gaddag() {
                 var h = rack.shift();
                 findWordsRecurse("", rack, h, trie, 'reverse');
             }
-        }
-        else {
+        } else if (hook.length > 1) {
+            searchTrie = findSuffix(hook, trie);
+            if (searchTrie) {
+                console.log('Suffix search: ' + JSON.stringify(trie, null, 2));
+                rack.forEach(function(h) {
+                    findWordsRecurse(hook, rack, h, searchTrie, 'reverse');
+                });
+            }
+
+            searchTrie = findPrefix(hook, trie);
+            if (searchTrie) {
+                console.log('Prefix search: ' + JSON.stringify(trie, null, 2));
+                rack.forEach(function(h) {
+                    findWordsRecurse(hook, rack, h, searchTrie, 'forward');
+                });
+            }
+            // while(rack.length > 0) {
+            //     var h = rack.shift();
+            // }
+        } else {
             findWordsRecurse("", rack, hook, trie, 'reverse');
         }
 
         return words.unique();
 
+        function findSuffix(suffix, trie) {
+            suffix.split('').reverse().some(function(letter) {
+                if (typeof trie === 'undefined') return true;
+                trie = trie[letter];
+                return false;
+            });
+            return trie;
+        }
+
+        function findPrefix(prefix, trie) {
+            prefix.split('').some(function(letter) {
+                if (typeof trie === 'undefined') return true;
+                trie = trie[letter];
+                return false;
+            });
+            return trie;
+        }
+
         function findWordsRecurse(word, rack, hook, cur, direction) {
+            console.log('h: ' + hook);
             var hookNode = cur[ hook ];
 
             if (typeof hookNode === 'undefined') return;
 
             var hookCh = (hook === separator || hook === "$" ? '' : hook);
             word = (direction === "reverse" ? hookCh + word : word + hookCh);
-
+            console.log('w: ' + word);
             for (var nodeKey in hookNode) {
+                console.log('n: ' + nodeKey);
                 var nodeVal = hookNode[ nodeKey ];
                 var nodeCh = (nodeKey === separator || nodeKey === "$" ? '' : nodeKey);
 
@@ -124,6 +202,7 @@ function Gaddag() {
         }
 
         function processRack(word, rack, nodeKey, hookNode, direction) {
+            console.log('rack: ' + rack.join(''));
             for (var i = 0; i < rack.length; i++) {
                 if (nodeKey === rack[i]) {
                     var duplicate = (i > 0 ? (rack[i] === rack[i - 1] ? true : false) : false);
