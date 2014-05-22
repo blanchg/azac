@@ -31,6 +31,25 @@ function Gaddag() {
         Gaddag.prototype.add(ch.join('') + separator + word.substring(i));
     };
 
+    this.findWord = function(word) {
+        var trie = Gaddag.prototype.getTrie();
+        word.split('').some(function (letter) {
+            if (trie === undefined)
+                return true;
+
+            if (trie['>']) {
+                trie = trie['>'];
+            }
+            trie = trie[letter];
+        },this);
+        if (trie !== undefined && 
+            (trie === 0 || trie['$'] !== undefined)) {
+            return true;
+        } else {
+            return false;
+        }
+    }
+
     this.findWordsWithHook = function (hook) {
         var trie = Gaddag.prototype.getTrie();
         var starterNode = trie[hook];
