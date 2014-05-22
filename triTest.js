@@ -7,8 +7,9 @@ gaddag.add('bat');
 gaddag.add('bating');
 // gaddag.add('racing');
 // gaddag.add('rubbing');
-// gaddag.add('raaacing');
+gaddag.add('tatin');
+gaddag.add('tating');
 
-log(JSON.stringify(gaddag.getTrie(), null, 2));
+// log(JSON.stringify(gaddag.getTrie(), null, 2));
 
-log(JSON.stringify(gaddag.findWordsWithRackAndHook('ing'.split(''), 'bat'), null, 2));
+log(gaddag.findWordsWithRackAndHook('bagt'.split(''), 'tin').join(', '));

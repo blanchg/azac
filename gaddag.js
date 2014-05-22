@@ -125,21 +125,24 @@ function Gaddag() {
         } else if (hook.length > 1) {
             searchTrie = findSuffix(hook, trie);
             if (searchTrie) {
-                console.log('Suffix search: ' + JSON.stringify(trie, null, 2));
+                var direction = 'reverse';
+                if (searchTrie['>']) {
+                    direction = 'forward';
+                    searchTrie = searchTrie['>'];
+                }
+                // console.log('Suffix search: ' + JSON.stringify(searchTrie, null, 2));
                 rack.forEach(function(h) {
-                    findWordsRecurse(hook, rack, h, searchTrie, 'reverse');
+                    findWordsRecurse(hook, rack, h, searchTrie, direction);
                 });
             }
 
-            searchTrie = findPrefix(hook, trie);
-            if (searchTrie) {
-                console.log('Prefix search: ' + JSON.stringify(trie, null, 2));
-                rack.forEach(function(h) {
-                    findWordsRecurse(hook, rack, h, searchTrie, 'forward');
-                });
-            }
-            // while(rack.length > 0) {
-            //     var h = rack.shift();
+            // searchTrie = findPrefix(hook, trie);
+            // if (searchTrie) {
+            //     console.log('Prefix search: ' + JSON.stringify(searchTrie, null, 2));
+
+            //     rack.forEach(function(h) {
+            //         findWordsRecurse(hook, rack, h, searchTrie, 'forward');
+            //     });
             // }
         } else {
             findWordsRecurse("", rack, hook, trie, 'reverse');
@@ -148,34 +151,35 @@ function Gaddag() {
         return words.unique();
 
         function findSuffix(suffix, trie) {
+            var search = trie;
             suffix.split('').reverse().some(function(letter) {
-                if (typeof trie === 'undefined') return true;
-                trie = trie[letter];
+                if (typeof search === 'undefined') return true;
+                search = search[letter];
                 return false;
             });
-            return trie;
+            return search;
         }
 
         function findPrefix(prefix, trie) {
+            var search = trie;
             prefix.split('').some(function(letter) {
-                if (typeof trie === 'undefined') return true;
-                trie = trie[letter];
+                if (typeof search === 'undefined') return true;
+                if (search['>'])
+                    search = search['>'];
+                search = search[letter];
                 return false;
             });
-            return trie;
+            return search;
         }
 
         function findWordsRecurse(word, rack, hook, cur, direction) {
-            console.log('h: ' + hook);
             var hookNode = cur[ hook ];
 
             if (typeof hookNode === 'undefined') return;
 
             var hookCh = (hook === separator || hook === "$" ? '' : hook);
             word = (direction === "reverse" ? hookCh + word : word + hookCh);
-            console.log('w: ' + word);
             for (var nodeKey in hookNode) {
-                console.log('n: ' + nodeKey);
                 var nodeVal = hookNode[ nodeKey ];
                 var nodeCh = (nodeKey === separator || nodeKey === "$" ? '' : nodeKey);
 
@@ -202,7 +206,6 @@ function Gaddag() {
         }
 
         function processRack(word, rack, nodeKey, hookNode, direction) {
-            console.log('rack: ' + rack.join(''));
             for (var i = 0; i < rack.length; i++) {
                 if (nodeKey === rack[i]) {
                     var duplicate = (i > 0 ? (rack[i] === rack[i - 1] ? true : false) : false);
