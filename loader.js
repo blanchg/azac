@@ -19,8 +19,6 @@ function LexiconLoader() {
         }
     }
 
-
-
     this.save = function save() {
         log('Saving the processed lexicon for later');
         console.time('write')
