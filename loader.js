@@ -24,7 +24,7 @@ function LexiconLoader() {
     this.save = function save() {
         log('Saving the processed lexicon for later');
         console.time('write')
-        fs.writeFileSync('lexicon.js', this.lexicon.getJson(), {encoding:'utf8'});
+        fs.writeFileSync('lexicon.js', JSON.stringify(this.lexicon.getTrie()), {encoding:'utf8'});
         console.timeEnd('write');
         if (this.callback)
         {
@@ -80,7 +80,8 @@ function LexiconLoader() {
                 lexiconJS += chunk.toString();
             })
             .on('end', (function () {
-                this.lexicon.setTrie(JSON.parse(lexiconJS)); 
+                // this.lexicon.setTrie(JSON.parse(lexiconJS));
+                this.lexicon.setTrie(eval(lexiconJS));
                 console.timeEnd('json');
 
                 if (callback) {
