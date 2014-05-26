@@ -14,7 +14,8 @@ function Grid(newSize) {
         this.length = this.size*this.size;
         this.fill(' ', 0, this.length);
         
-        this.board = "T  d   T   d  T" +
+        this.board = 
+        "T  d   T   d  T" +
         " D   t   t   D " +
         "  D   d d   D  " +
         "d  D   d   D  d" +
@@ -57,7 +58,7 @@ function Grid(newSize) {
         // this.print();
     }
 
-    this.fits = function(col, row, horizontal, word) {
+    this.fits = function(col, row, horizontal, word, firstWord) {
     	if (col < 0 || row < 0)
     		return false;
     	if (horizontal) {
@@ -68,10 +69,15 @@ function Grid(newSize) {
     			return false;
     	}
 
-    	var result = word.split('').some(function (letter) {
+    	var middleFilled = false;
+
+    	var result = !word.split('').some(function (letter) {
     		var rawCell = this.rawCell(col, row);
     		var cell = this.rawCell(col, row);
-    		log('Letter ' + letter + ' fits ' + rawCell + ' ' + cell + ' (' + col + ', ' + row + ')');
+    		if (col == Math.floor(this.size / 2) && row == Math.floor(this.size / 2)) {
+    			middleFilled = true;
+    		}
+    		// log('Letter ' + letter + ' fits ' + rawCell + ' ' + cell + ' (' + col + ', ' + row + ')');
     		if (horizontal)
     		{
     			col++;
@@ -87,16 +93,12 @@ function Grid(newSize) {
     		return false;
     	}, this);
 
-    	log(word + ' fits ' + (!result));
-    	return !result;
-        // var i = 0;
-        // var that = this;
-        // word.split('').forEach(function (letter) {
-        //     // log("Have that: " + this);
-        //     var index = (row + i++) * this.size + col
-        //     this[index] = letter;
-        // }, that);
-        // this.print();
+    	if (result && firstWord) {
+    		result = middleFilled;
+
+    	}
+    	// log(word + ' fits ' + (!result));
+    	return result;
     }
 
     this.rawCell = function(col, row) {

@@ -6,7 +6,8 @@
 // If not browser, assume nodejs
 if (typeof browser === 'undefined') {
     var Trie = require('./trie.js').Trie;
-    require('./util.js');
+    var log = require('./util.js').log;
+
 }
 
 function Gaddag() {
@@ -136,38 +137,55 @@ function Gaddag() {
             /*
                 Each character in the rack acts as a hook with the remaining characters as the new rack.
             */
-
             while(rack.length > 1) {
                 var h = rack.shift();
                 findWordsRecurse("", rack, h, trie, 'reverse');
             }
         } else if (hook.length > 1) {
-            searchTrie = findSuffix(hook, trie);
+            if (hook.indexOf('?') != -1) {
+                searchGaps(hook.slice(0), rack.slice(0));
+                function searchGaps(hook, searchRack) {
+                    var index = hook.indexOf('?');
+                    if (index != -1) {
+                        if (index != 0) {
+                            // Find words up to the next gap
+                            log('Finding words with ' + hook.slice(0, index).join(','));
+                            findWordsWithPart(hook.slice(0, index), trie, searchRack.slice(0));
+                        }
+                        if (searchRack.length == 0)
+                            return;
+
+                        searchRack.forEach(function (rackLetter, i) {
+                            var tempRack = searchRack.slice(0);
+                            hook[index] = tempRack.splice(i, 1)[0];
+                            searchGaps(hook.slice(0), tempRack.slice(0));
+                        });
+                    } else {
+                        findWordsWithPart(hook.slice(0), trie, searchRack.slice(0));
+                    }
+                }
+            } else {
+                findWordsWithPart(hook, trie, rack);
+            }
+        } else {
+            findWordsRecurse("", rack, hook, trie, 'reverse');
+        }
+
+        return words.unique();
+
+        function findWordsWithPart(hook, trie, rack) {
+            var searchTrie = findSuffix(hook, trie);
             if (searchTrie) {
                 var direction = 'reverse';
                 if (searchTrie['>']) {
                     direction = 'forward';
                     searchTrie = searchTrie['>'];
                 }
-                // console.log('Suffix search: ' + JSON.stringify(searchTrie, null, 2));
                 rack.forEach(function(h) {
                     findWordsRecurse(hook, rack, h, searchTrie, direction);
                 });
             }
-
-            // searchTrie = findPrefix(hook, trie);
-            // if (searchTrie) {
-            //     console.log('Prefix search: ' + JSON.stringify(searchTrie, null, 2));
-
-            //     rack.forEach(function(h) {
-            //         findWordsRecurse(hook, rack, h, searchTrie, 'forward');
-            //     });
-            // }
-        } else {
-            findWordsRecurse("", rack, hook, trie, 'reverse');
         }
-
-        return words.unique();
 
         function findSuffix(suffix, trie) {
             var search = trie;
