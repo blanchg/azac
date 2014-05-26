@@ -1,5 +1,6 @@
 var log = require('./util.js').log;
 var clc = require('cli-color');
+var ansiTrim = require('cli-color/trim');
 
 function Grid(newSize) {
     if (newSize.constructor == Grid) {
@@ -35,7 +36,7 @@ function Grid(newSize) {
             }, this);
     }
 
-    this.wordH = function(row, col, word) {
+    this.wordH = function(col, row, word) {
         var i = row * this.size + col;
         var that = this;
         word.split('').forEach(function (letter) {
@@ -45,7 +46,7 @@ function Grid(newSize) {
         // this.print();
     }
 
-    this.wordV = function(row, col, word) {
+    this.wordV = function(col, row, word) {
         var i = 0;
         var that = this;
         word.split('').forEach(function (letter) {
@@ -56,14 +57,38 @@ function Grid(newSize) {
         // this.print();
     }
 
-    this.fits = function(row, col, horizontal, word) {
-    	if (row < 0 || col < 0)
+    this.fits = function(col, row, horizontal, word) {
+    	if (col < 0 || row < 0)
     		return false;
     	if (horizontal) {
-    		return col + word.length <= this.size;
+    		if (col + word.length > this.size)
+    			return false;
     	} else {
-    		return row + word.length <= this.size;
+    		if (row + word.length > this.size)
+    			return false;
     	}
+
+    	var result = word.split('').some(function (letter) {
+    		var rawCell = this.rawCell(col, row);
+    		var cell = this.rawCell(col, row);
+    		log('Letter ' + letter + ' fits ' + rawCell + ' ' + cell + ' (' + col + ', ' + row + ')');
+    		if (horizontal)
+    		{
+    			col++;
+    		} else {
+    			row++;
+    		}
+    		if (rawCell != letter && cell == ansiTrim(rawCell))
+    		{
+    			// Doesn't match letter already on board
+    			return true;
+    		}
+			// Blank or matches previous piece
+    		return false;
+    	}, this);
+
+    	log(word + ' fits ' + (!result));
+    	return !result;
         // var i = 0;
         // var that = this;
         // word.split('').forEach(function (letter) {
@@ -74,7 +99,7 @@ function Grid(newSize) {
         // this.print();
     }
 
-    this.rawCell = function(row, col) {
+    this.rawCell = function(col, row) {
     	if (row >= this.size || col >= this.size) {
     		return null;
     	}
@@ -82,7 +107,7 @@ function Grid(newSize) {
         return this[i];
     }
 
-    this.cell = function(row, col) {
+    this.cell = function(col, row) {
     	if (row >= this.size || col >= this.size) {
     		return null;
     	}

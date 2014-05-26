@@ -78,8 +78,8 @@ function LexiconLoader() {
                 lexiconJS += chunk.toString();
             })
             .on('end', (function () {
-                // this.lexicon.setTrie(JSON.parse(lexiconJS));
-                this.lexicon.setTrie(eval(lexiconJS));
+                this.lexicon.setTrie(JSON.parse(lexiconJS));
+                // this.lexicon.setTrie(eval(lexiconJS));
                 console.timeEnd('json');
 
                 if (callback) {
