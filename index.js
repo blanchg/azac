@@ -107,13 +107,13 @@ function scoreLetters(letters, col, row, horizontal) {
     		var cell = grid.rawCell(cellCol, cellRow);
     		if (cell === null)
     			return -1;
-            log('letter ' + letter + ' ' + score + ' * ' + letterMultiplier(cell) + ' ' + cell);
+            // log('letter ' + letter + ' ' + score + ' * ' + letterMultiplier(cell) + ' ' + cell);
     		score *= letterMultiplier(cell);
     		multiplier = multiplier * wordMultiplier(cell);
     	}
         totalScore += score;
     });
-    log('word ' + letters.join('') + ' ' + totalScore + ' * ' + multiplier);
+    // log('word ' + letters.join('') + ' ' + totalScore + ' * ' + multiplier);
     totalScore *= multiplier;
     return totalScore;
 }
@@ -191,7 +191,7 @@ function process() {
                             hookLetters.push(rawCell);
                         }
                     };
-                    processRack(rack.slice(0), [], hookLetters.slice(0), 0, false);
+                    processRack(rack.slice(0), [], hookLetters.join(''), 0, false);
                     horizontal = false;
                     hookRow = row;
                     hookLetters = [];
@@ -204,7 +204,7 @@ function process() {
                             hookLetters.push(rawCell);
                         }
                     };
-                    processRack(rack.slice(0), [], hookLetters.slice(0), 0, false);
+                    processRack(rack.slice(0), [], hookLetters.join(''), 0, false);
                 }
             };
         }

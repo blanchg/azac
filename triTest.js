@@ -16,14 +16,14 @@ gaddag.add('bating');
 
 // log('Find part of word: ' + gaddag.findWordsWithRackAndHook('bagt'.split(''), 'tin').join(', '));
 
-// log('Find word: ' + gaddag.findWord('bating'));
-// log('Find word: ' + gaddag.findWord('batin'));
-// log('Find word: ' + gaddag.findWord('bati'));
-// log('Find word: ' + gaddag.findWord('bat'));
-// log('Find word: ' + gaddag.findWord('blah'));
-// log('Find word: ' + gaddag.findWord('bl'));
-// log('Find word: ' + gaddag.findWord('b'));
-// log('Find word: ' + gaddag.findWord('bla'));
+log('Find word: ' + assert(gaddag.findWord('bating'), false));
+log('Find word: ' + gaddag.findWord('batin'));
+log('Find word: ' + gaddag.findWord('bati'));
+log('Find word: ' + gaddag.findWord('bat'));
+log('Find word: ' + gaddag.findWord('blah'));
+log('Find word: ' + gaddag.findWord('bl'));
+log('Find word: ' + gaddag.findWord('b'));
+log('Find word: ' + gaddag.findWord('bla'));
 
 
-log('Find part of word: ' + gaddag.findWordsWithRackAndHook('tg'.split(''), 'ba?in?').join(', '));
+log('Find part of word: ' + gaddag.findWordsWithRackAndHook('bt'.split(''), '?a?').join(', '));

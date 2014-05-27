@@ -124,6 +124,10 @@ function Gaddag() {
         }
     }
 
+    /**
+     * rack is array
+     * hook is string
+     */
     this.findWordsWithRackAndHook = function (rack, hook) {
         var trie = Gaddag.prototype.getTrie();
         var words = [];
@@ -142,32 +146,40 @@ function Gaddag() {
                 findWordsRecurse("", rack, h, trie, 'reverse');
             }
         } else if (hook.length > 1) {
-            log('Type of hook: ' + typeof(hook));
-            if (typeof(hook) == 'string') {
-                hook = hook.split('');
-            }
-            log('Type of hook: ' + typeof(hook));
+            // if (typeof(hook) == 'string') {
+            //     hook = hook.split('');
+            // }
             if (hook.indexOf('?') != -1) {
-                searchGaps(hook.slice(0), rack.slice(0));
+                searchGaps(hook, rack.slice(0));
                 function searchGaps(hook, searchRack) {
-                    log('hook: ' + hook);
+                    // log('Hook: ' + hook + " rack: " + searchRack + ' words ' + words);
                     var index = hook.indexOf('?');
+                    // log('Index: ' + index);
                     if (index != -1) {
                         if (index != 0) {
                             // Find words up to the next gap
-                            log('Finding words with ' + hook.slice(0, index).join(','));
-                            findWordsWithPart(hook.slice(0, index), trie, searchRack.slice(0));
+                            // log('Finding words with ' + hook.substr(0, index));
+                            findWordsWithPart(hook.substr(0, index), trie, []);
+                            // log('words: ' + words);
                         }
-                        if (searchRack.length == 0)
+                        if (searchRack.length == 0) {
                             return;
+                        }
 
                         searchRack.forEach(function (rackLetter, i) {
+                            // log('  rack letter ' + rackLetter + ' index ' + index + ' rack ' + searchRack);
                             var tempRack = searchRack.slice(0);
-                            hook[index] = tempRack.splice(i, 1)[0];
-                            searchGaps(hook.slice(0), tempRack.slice(0));
+                            // log('temp rack: ' + tempRack[i]);
+                            var hookArray = hook.split('');
+                            hookArray[index] = tempRack[i];
+                            hook = hookArray.join('');
+                            tempRack.splice(i, 1);
+                            // log('hook: ' + hook + ' temp rack: ' + tempRack);
+                            searchGaps(hook.slice(0), tempRack);
                         });
                     } else {
-                        findWordsWithPart(hook.slice(0), trie, searchRack.slice(0));
+                        // log('searching ' + hook + JSON.stringify(trie));
+                        findWordsWithPart(hook.slice(0), trie, []); //searchRack.slice(0)
                     }
                 }
             } else {
@@ -183,23 +195,35 @@ function Gaddag() {
             var searchTrie = findSuffix(hook, trie);
             if (searchTrie) {
                 var direction = 'reverse';
-                if (searchTrie['>']) {
+                if (searchTrie['>'] !== undefined) {
                     direction = 'forward';
                     searchTrie = searchTrie['>'];
                 }
-                rack.forEach(function(h) {
-                    findWordsRecurse(hook, rack, h, searchTrie, direction);
-                });
+                // log('search trie ' + JSON.stringify(searchTrie));
+                if (rack.length == 0)
+                {
+                    // log('searching with no rack using hook ' + hook + ' ' + JSON.stringify(searchTrie));
+                    if (searchTrie === 0 || searchTrie['$'] === 0) {
+                        // log('WORD FOUND');
+                        words.push(hook);
+                    }
+                } else {
+                    rack.forEach(function(h) {
+                        findWordsRecurse(hook, rack, h, searchTrie, direction);
+                    });
+                }
             }
         }
 
         function findSuffix(suffix, trie) {
             var search = trie;
-            if (typeof(suffix) != 'string')
-                suffix = suffix.join('');
+            // if (typeof(suffix) != 'string')
+            //     suffix = suffix.join('');
             suffix.split('').reverse().some(function(letter) {
+                // log('suffix letter ' + letter);
                 if (typeof search === 'undefined') return true;
                 search = search[letter];
+                // log('suffix trie ' + JSON.stringify(search));
                 return false;
             });
             return search;
