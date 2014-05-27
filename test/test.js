@@ -61,11 +61,11 @@ describe('Gaddag', function() {
 				.should.containDeep(['bat'])
 				.and.have.lengthOf(1);
 		});
-		// it ('should find word missing all character', function() {
-		// 	gaddag.findWordsWithRackAndHook('batin'.split(''), '?????')
-		// 		.should.containDeep(['bat', 'batin'])
-		// 		.and.have.lengthOf(2);
-		// });
+		it ('should find word missing all character', function() {
+			gaddag.findWordsWithRackAndHook('batin'.split(''), '?????')
+				.should.containDeep(['bat', 'batin'])
+				.and.have.lengthOf(2);
+		});
 		it ('should find word with no trie children', function() {
 			gaddag.findWordsWithRackAndHook('bla'.split(''), '???')
 				.should.containDeep(['bla'])

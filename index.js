@@ -50,12 +50,17 @@ var removeHookFromWord = function(hook, word, error) {
         return word;
     if (error === undefined)
         error = true;
-    var index = word.indexOf(hook);
-    if (index == -1 && error) {
-        log("Error in word " + word)
-        throw "Invalid move error: " + hook + " not in " + word + " index: " + index;
-    }
-    word = word.substring(0, index) + word.substring(index + 1);
+    var result = hook.split('').some(function(hookLetter) {
+        if (hookLetter == '?') return false;
+        var index = word.indexOf(hook);
+        if (index == -1 && error) {
+            log("Error in word " + word)
+            throw "Invalid move error: " + hook + " not in " + word + " index: " + index;
+            return true;
+        }
+        word = word.substring(0, index) + word.substring(index + 1);
+        return false;
+    });
     return word;
 }
 
@@ -101,16 +106,14 @@ function scoreLetters(letters, col, row, horizontal) {
     var multiplier = 1;
     letters.forEach(function(letter, i) {
     	var score = scores[alphabet.indexOf(letter)];
-    	if (col !== undefined && row !== undefined) {
-            var cellCol = horizontal?col:col+i;
-            var cellRow = !horizontal?row:row+i;
-    		var cell = grid.rawCell(cellCol, cellRow);
-    		if (cell === null)
-    			return -1;
-            // log('letter ' + letter + ' ' + score + ' * ' + letterMultiplier(cell) + ' ' + cell);
-    		score *= letterMultiplier(cell);
-    		multiplier = multiplier * wordMultiplier(cell);
-    	}
+        var cellCol = horizontal?col:col+i;
+        var cellRow = !horizontal?row:row+i;
+		var cell = grid.rawCell(cellCol, cellRow);
+		if (cell === null)
+			return -1;
+        // log('letter ' + letter + ' ' + score + ' * ' + letterMultiplier(cell) + ' ' + cell);
+		score *= letterMultiplier(cell);
+		multiplier = multiplier * wordMultiplier(cell);
         totalScore += score;
     });
     // log('word ' + letters.join('') + ' ' + totalScore + ' * ' + multiplier);
