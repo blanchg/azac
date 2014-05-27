@@ -142,9 +142,15 @@ function Gaddag() {
                 findWordsRecurse("", rack, h, trie, 'reverse');
             }
         } else if (hook.length > 1) {
+            log('Type of hook: ' + typeof(hook));
+            if (typeof(hook) == 'string') {
+                hook = hook.split('');
+            }
+            log('Type of hook: ' + typeof(hook));
             if (hook.indexOf('?') != -1) {
                 searchGaps(hook.slice(0), rack.slice(0));
                 function searchGaps(hook, searchRack) {
+                    log('hook: ' + hook);
                     var index = hook.indexOf('?');
                     if (index != -1) {
                         if (index != 0) {
@@ -189,6 +195,8 @@ function Gaddag() {
 
         function findSuffix(suffix, trie) {
             var search = trie;
+            if (typeof(suffix) != 'string')
+                suffix = suffix.join('');
             suffix.split('').reverse().some(function(letter) {
                 if (typeof search === 'undefined') return true;
                 search = search[letter];
