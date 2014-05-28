@@ -6,7 +6,7 @@ var Gaddag = require('../gaddag.js').Gaddag;
 describe("Grid", function() {
 	var grid = null;
 	beforeEach(function () {
- 		grid = new Grid(15)
+ 		grid = new Grid(15);
 	});
 
 	it("should have size of 15", function() {
@@ -50,9 +50,10 @@ describe("Grid", function() {
 	describe("validate move", function () {
 
 		beforeEach(function() {
-			var gaddag = new Gaddag();
-			gaddag.addAll(['opiate', 'dirty','dirt','ed']);
-			grid.lexicon = gaddag;
+			grid.lexicon = new Gaddag();
+			grid.lexicon.addAll(['opiate', 'dirty','dirt','ed','eda','it','re']);
+			// log("Gaddag " + gaddag === grid.lexicon);
+			// log("Gaddag trie " + gaddag.trie === grid.lexicon.trie)
 		});
 
 		it.skip("should score a valid first move", function() {
@@ -75,6 +76,18 @@ describe("Grid", function() {
 			var row = 7;
 			var horizontal = false;
 			grid.validateMove(word, col, row, horizontal).should.be.exactly(9);
+			grid.addWord(word, col, row, horizontal);
+			grid.print();
+		});
+		it("should score a middle parallel move", function() {
+			grid.addWord('opiate', 7, 2, false);
+			grid.addWord('opiate', 9, 4, false);
+			// grid.print();
+			var word = 'dirt';
+			var col = 8;
+			var row = 7;
+			var horizontal = false;
+			grid.validateMove(word, col, row, horizontal).should.be.exactly(15);
 			grid.addWord(word, col, row, horizontal);
 			grid.print();
 		});

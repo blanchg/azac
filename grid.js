@@ -263,12 +263,14 @@ function Grid(newSize) {
 	            log('p ' + prefix + ' s ' + suffix);
 	            var altWord = prefix + letter + suffix;
 	            log('alt word: ' + altWord);
-	            if (this.lexicon.findWord(altWord)) {
-	            	altScore = this.scoreWord(prefix) + this.scoreWord(suffix) + letterScore * letterMultiplier;
-	            	altScore *= wordMultiplier;
-	            } else {
-	            	log('alt word: ' + altWord + ' not in lexicon');
-	            }
+	            if (altWord.length > 1) {
+		            if (this.lexicon.findWord(altWord)) {
+		            	altScore = this.scoreWord(prefix) + this.scoreWord(suffix) + letterScore * letterMultiplier;
+		            	altScore *= wordMultiplier;
+		            } else {
+		            	log('alt word: ' + altWord + ' not in lexicon');
+		            }
+		        }
 			}
 
             log(' ' + letter + ' ' + letterScore + ' * ' + letterMultiplier + ' + ' + altScore + ' cell ' + rawCell);

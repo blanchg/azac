@@ -33,7 +33,7 @@ function Gaddag() {
     };
 
     this.findWord = function(word) {
-        var trie = Gaddag.prototype.getTrie();
+        var trie = this.getTrie();
         word.split('').some(function (letter) {
             if (trie === undefined)
                 return true;
@@ -52,7 +52,7 @@ function Gaddag() {
     }
 
     this.findWordsWithHook = function (hook) {
-        var trie = Gaddag.prototype.getTrie();
+        var trie = this.getTrie();
         var starterNode = trie[hook];
         var words = [];
 
@@ -85,7 +85,7 @@ function Gaddag() {
     }
 
     this.findWordsWithSuffix = function (suffix) {
-        var trie = Gaddag.prototype.getTrie();
+        var trie = this.getTrie();
         var starterNode = trie;
         var words = [];
 
@@ -129,7 +129,7 @@ function Gaddag() {
      * hook is string
      */
     this.findWordsWithRackAndHook = function (rack, hook) {
-        var trie = Gaddag.prototype.getTrie();
+        var trie = this.getTrie();
         var words = [];
 
         /* To avoid recursing down duplicate characters more than once, sort the array and check whether we have already
