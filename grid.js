@@ -58,6 +58,14 @@ function Grid(newSize) {
         // this.print();
     }
 
+    this.addWord = function(word, col, row, horizontal) {
+        if (horizontal) {
+            this.wordH(col, row, word);
+        } else {
+            this.wordV(col, row, word);
+        }
+    }
+
     this.fits = function(col, row, horizontal, word, firstWord) {
     	if (col < 0 || row < 0)
     		return false;
@@ -94,6 +102,7 @@ function Grid(newSize) {
     	}, this);
 
     	if (result && firstWord) {
+            log('middleFilled: ' + middleFilled);
     		result = middleFilled;
 
     	}
@@ -126,6 +135,38 @@ function Grid(newSize) {
 
     this.clone = function() {
         return new Grid(this);
+    }
+
+    /**
+     * Takes a word as a string, a column and a row and if it is a horizontal word
+
+    Place letters one-by-one onto the board
+        For each one, check if there are any existing letters to the immediate left or right (above/below if the move is horizontal).
+        If yes, grab the subword to the left of this position (in this case, ‘SQUAT’), append this letter, then add the subword to the right of this position (nothing this time).
+        Validate this hook against the lexicon.
+        Score the letters appropriately - multipliers on existing letters don’t count, but whatever multiplier the current letter is sitting on will apply. This should be done while grabbing the prefix and suffix for the hook.
+    Validate the “main” word and calculate the score appropriately.
+
+     **/
+    this.validateMove = function(word, col, row, horizontal, firstWord, rackLength) {
+        if (!this.fits(col, row, horizontal, word, firstWord))
+            return -1;
+        var totalScore = 0;
+        var wordMultiplier = 1;
+        word.split('').forEach(function(letter, i) {
+            var letterMultiplier = 1;
+            var letterScore = 0;
+            
+            totalScore += letterScore * letterMultiplier;
+        });
+
+        totalScore = totalScore * wordMultiplier;
+
+        if (rackLength === 0)
+        {
+            totalScore += 50;
+        }
+        return totalScore;
     }
 }
 

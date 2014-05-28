@@ -151,6 +151,10 @@ function Gaddag() {
             // }
             if (hook.indexOf('?') != -1) {
                 searchGaps(hook, rack.slice(0));
+                while (hook[0] == '?') {
+                    hook = hook.substr(1);
+                    searchGaps(hook, rack.slice(0));
+                }
                 function searchGaps(hook, searchRack) {
                     // log('Hook: ' + hook + " rack: " + searchRack + ' words ' + words);
                     var index = hook.indexOf('?');

@@ -63,7 +63,7 @@ describe('Gaddag', function() {
 		});
 		it ('should find word missing all character', function() {
 			gaddag.findWordsWithRackAndHook('batin'.split(''), '?????')
-				.should.containDeep(['bat', 'batin'])
+				.should.containDeep(['batin', 'bat'])
 				.and.have.lengthOf(2);
 		});
 		it ('should find word with no trie children', function() {
@@ -75,6 +75,17 @@ describe('Gaddag', function() {
 			gaddag.findWordsWithRackAndHook('atng'.split(''), 'b??i??')
 				.should.containDeep(['batin', 'bating'])
 				.and.have.lengthOf(2);
+		});
+		it ('should find word with blank character at the start', function() {
+			gaddag.findWordsWithRackAndHook('bl'.split(''), '?????a')
+				.should.containDeep(['bla'])
+				.and.have.lengthOf(1);
+		});
+		it.skip ('should find word must cross hook', function() {
+			gaddag.findWordsWithRackAndHook('bat'.split(''), '????r????')
+				.should
+					// .containDeep(['bla'])
+					.and.have.lengthOf(0);
 		});
 	});
 });

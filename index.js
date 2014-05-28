@@ -52,10 +52,10 @@ var removeHookFromWord = function(hook, word, error) {
         error = true;
     var result = hook.split('').some(function(hookLetter) {
         if (hookLetter == '?') return false;
-        var index = word.indexOf(hook);
+        var index = word.indexOf(hookLetter);
         if (index == -1 && error) {
             log("Error in word " + word)
-            throw "Invalid move error: " + hook + " not in " + word + " index: " + index;
+            throw "Invalid move error: " + hookLetter + " not in " + word + " index: " + index;
             return true;
         }
         word = word.substring(0, index) + word.substring(index + 1);
@@ -272,7 +272,7 @@ function process() {
                         wordRow = itemRow;
                         wordHorizontal = horizontal;
                         longest = itemScore;
-                        // log("*");
+                        log("  " + word + " " + wordHook);
                     }
                 }, this);
         }
@@ -283,7 +283,7 @@ function process() {
             log("Reached end rack " + rack.join("") + " bag " + bag.length);
             break;
         }
-
+        log("Scoring word: " + word + ' replacements: ' + wordReplacements + ' hook: ' + wordHook);
         var foundWord = word;
         wordReplacements.forEach(function (letter) { word = removeHookFromWord(letter, word, false) });
         var scoreWord = word;
