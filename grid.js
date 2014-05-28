@@ -2,6 +2,9 @@ var log = require('./util.js').log;
 var clc = require('cli-color');
 var ansiTrim = require('cli-color/trim');
 
+var ALPHABET = 'abcdefghijklmnopqrstuvwxyz'.split('');
+var LETTERSCORES = '1,3,3,2,1,4,2,4,1,8,5,1,3,1,1,3,10,1,1,1,1,4,4,8,4,10'.split(',').map(function(item){return parseInt(item)});
+
 function Grid(newSize) {
     if (newSize.constructor == Grid) {
         this.size = newSize.size;
@@ -102,7 +105,7 @@ function Grid(newSize) {
     	}, this);
 
     	if (result && firstWord) {
-            log('middleFilled: ' + middleFilled);
+            // log('middleFilled: ' + middleFilled);
     		result = middleFilled;
 
     	}
@@ -137,6 +140,34 @@ function Grid(newSize) {
         return new Grid(this);
     }
 
+    this.scoreLetter = function(letter) {
+        var score = LETTERSCORES[ALPHABET.indexOf(letter)];
+        if (isNaN(score))
+            return;
+        return score;
+    }
+    this.wordMultiplier = function(cell) {
+        switch(cell) {
+            case clc.bold('T'):
+                return 3;
+            case clc.bold('D'):
+                return 2;
+            default:
+                return 1;
+        } 
+    }
+
+    this.letterMultiplier = function(cell) {
+
+        switch(cell) {
+            case clc.bold('t'):
+                return 3;
+            case clc.bold('d'):
+                return 2;
+            default:
+                return 1;
+        } 
+    }
     /**
      * Takes a word as a string, a column and a row and if it is a horizontal word
 
@@ -154,11 +185,16 @@ function Grid(newSize) {
         var totalScore = 0;
         var wordMultiplier = 1;
         word.split('').forEach(function(letter, i) {
-            var letterMultiplier = 1;
-            var letterScore = 0;
-            
+            var cellCol = horizontal?col:col+i;
+            var cellRow = !horizontal?row:row+i;
+            var cell = this.rawCell(cellCol, cellRow);
+            if (cell === null)
+                return -1;
+            var letterMultiplier = this.letterMultiplier(cell);
+            var letterScore = this.scoreLetter(letter);
             totalScore += letterScore * letterMultiplier;
-        });
+            wordMultiplier = wordMultiplier * this.wordMultiplier(cell);
+        }, this);
 
         totalScore = totalScore * wordMultiplier;
 
@@ -168,6 +204,9 @@ function Grid(newSize) {
         }
         return totalScore;
     }
+
+
+    
 }
 
 Grid.prototype = new Array();

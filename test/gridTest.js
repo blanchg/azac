@@ -12,13 +12,13 @@ describe("Grid", function() {
 		grid.size.should.be.exactly(15);
 	});
 	it("should allow adding a word", function() {
-		grid.addWord('opiate', 7, 4, false);
-		grid.cell(7, 4).should.be.exactly('o');
-		grid.cell(7, 5).should.be.exactly('p');
+		grid.addWord('opiate', 7, 2, false);
+		grid.cell(7, 2).should.be.exactly('o');
+		grid.cell(7, 3).should.be.exactly('p');
 	});
 	describe("validate move", function () {
 		it("should score a valid first move", function() {
-			grid.validateMove('opiate', 7, 4, false, true).should.be.exactly(22);
+			grid.validateMove('opiate', 7, 2, false, true).should.be.exactly(22);
 		});
 	});
 });
