@@ -20,5 +20,14 @@ describe("Grid", function() {
 		it("should score a valid first move", function() {
 			grid.validateMove('opiate', 7, 2, false, true).should.be.exactly(22);
 		});
+		it("should not score an invalid first move", function() {
+			grid.validateMove('opiate', 6, 2, false, true).should.be.exactly(-1);
+		});
+		it("should score a valid second hook move", function() {
+			grid.addWord('opiate', 7, 2, false);
+			grid.validateMove('tepid', 5, 3, true, false).should.be.exactly(22);
+			grid.addWord('tepid', 5, 3, true);
+			grid.print();
+		});
 	});
 });

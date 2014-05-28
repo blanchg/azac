@@ -192,6 +192,7 @@ function Grid(newSize) {
                 return -1;
             var letterMultiplier = this.letterMultiplier(cell);
             var letterScore = this.scoreLetter(letter);
+            log(' ' + letter + ' ' + letterScore + ' * ' + letterMultiplier + ' cell ' + cell);
             totalScore += letterScore * letterMultiplier;
             wordMultiplier = wordMultiplier * this.wordMultiplier(cell);
         }, this);
