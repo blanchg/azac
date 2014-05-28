@@ -40,6 +40,8 @@ function Grid(newSize) {
             }, this);
     }
 
+    this.lexicon = null;
+
     this.wordH = function(col, row, word) {
         var i = row * this.size + col;
         var that = this;
@@ -140,12 +142,19 @@ function Grid(newSize) {
         return new Grid(this);
     }
 
+    this.scoreWord = function(word) {
+    	return word.split('').reduce(function(prev, letter) {
+    		return prev + this.scoreLetter(letter);
+    	}.bind(this), 0);
+    }
+
     this.scoreLetter = function(letter) {
         var score = LETTERSCORES[ALPHABET.indexOf(letter)];
         if (isNaN(score))
             return;
         return score;
     }
+
     this.wordMultiplier = function(cell) {
         switch(cell) {
             case clc.bold('T'):
@@ -168,6 +177,55 @@ function Grid(newSize) {
                 return 1;
         } 
     }
+
+    this.cellEmpty = function(col, row) {
+    	var rawCell = this.rawCell(col, row);
+    	var cell = this.cell(col, row); 
+    	return cell !== rawCell || cell === ' ';
+    }
+
+    this.prefix = function(col, row, horizontal) {
+    	var word = '';
+    	if (!this.cellEmpty(col, row))
+    		return word;
+    	if (horizontal) {
+    		for (var itemCol = col-1; itemCol > 0; itemCol--) {
+    			if (this.cellEmpty(itemCol, row)) {
+    				break;
+    			}
+    			word = this.cell(itemCol, row) + word;
+    		};
+    	} else {
+    		for (var itemRow = row-1; itemRow > 0; itemRow--) {
+    			if (this.cellEmpty(col, itemRow))
+    				break;
+    			word = this.cell(col, itemRow) + word;
+    		};
+    	}
+    	return word;
+    }
+
+    this.suffix = function(col, row, horizontal) {
+    	var word = '';
+    	if (!this.cellEmpty(col, row))
+    		return word;
+    	if (horizontal) {
+    		for (var itemCol = col+1; itemCol < this.size; itemCol++) {
+    			if (this.cellEmpty(itemCol, row)) {
+    				break;
+    			}
+    			word += this.cell(itemCol, row);
+    		};
+    	} else {
+    		for (var itemRow = row+1; itemRow < this.size; itemRow++) {
+    			if (this.cellEmpty(col, itemRow))
+    				break;
+    			word += this.cell(col, itemRow);
+    		};
+    	}
+    	return word;
+    }
+
     /**
      * Takes a word as a string, a column and a row and if it is a horizontal word
 
@@ -183,21 +241,42 @@ function Grid(newSize) {
         if (!this.fits(col, row, horizontal, word, firstWord))
             return -1;
         var totalScore = 0;
-        var wordMultiplier = 1;
+        var totalWordMultiplier = 1;
         word.split('').forEach(function(letter, i) {
-            var cellCol = horizontal?col:col+i;
-            var cellRow = !horizontal?row:row+i;
-            var cell = this.rawCell(cellCol, cellRow);
-            if (cell === null)
-                return -1;
-            var letterMultiplier = this.letterMultiplier(cell);
+            var cellCol = horizontal?col+i:col;
+            var cellRow = !horizontal?row+i:row;
+            var rawCell = this.rawCell(cellCol, cellRow);
+            
+            // var cell = this.cell(cellCol, cellRow);
+            // Outside of grid or word in place
+            if (rawCell === null)
+                return;
+
+            var letterMultiplier = this.letterMultiplier(rawCell);
             var letterScore = this.scoreLetter(letter);
-            log(' ' + letter + ' ' + letterScore + ' * ' + letterMultiplier + ' cell ' + cell);
-            totalScore += letterScore * letterMultiplier;
-            wordMultiplier = wordMultiplier * this.wordMultiplier(cell);
+            var wordMultiplier = this.wordMultiplier(rawCell)
+            var altScore = 0;
+            if (this.lexicon !== null) {
+            	log(cellCol + ', ' + cellRow + ' ' + horizontal);
+	            var prefix = this.prefix(cellCol, cellRow, !horizontal);
+	            var suffix = this.suffix(cellCol, cellRow, !horizontal);
+	            log('p ' + prefix + ' s ' + suffix);
+	            var altWord = prefix + letter + suffix;
+	            log('alt word: ' + altWord);
+	            if (this.lexicon.findWord(altWord)) {
+	            	altScore = this.scoreWord(prefix) + this.scoreWord(suffix) + letterScore * letterMultiplier;
+	            	altScore *= wordMultiplier;
+	            } else {
+	            	log('alt word: ' + altWord + ' not in lexicon');
+	            }
+			}
+
+            log(' ' + letter + ' ' + letterScore + ' * ' + letterMultiplier + ' + ' + altScore + ' cell ' + rawCell);
+            totalScore += letterScore * letterMultiplier + altScore;
+            totalWordMultiplier = totalWordMultiplier * wordMultiplier;
         }, this);
 
-        totalScore = totalScore * wordMultiplier;
+        totalScore = totalScore * totalWordMultiplier;
 
         if (rackLength === 0)
         {
@@ -206,8 +285,6 @@ function Grid(newSize) {
         return totalScore;
     }
 
-
-    
 }
 
 Grid.prototype = new Array();
