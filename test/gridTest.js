@@ -83,6 +83,15 @@ describe("Grid", function() {
 			// grid.print();
 		});
 
+		it("should not score an invalid second parallel move", function() {
+			grid.addWord('OPIATE', 7, 2, false);
+			var word = 'DIRT';
+			var col = 8;
+			var row = 6;
+			var horizontal = false;
+			grid.validateMove(word, col, row, horizontal).should.be.exactly(-1);
+		});
+
 		it("should score a middle parallel move", function() {
 			grid.addWord('OPIATE', 7, 2, false);
 			grid.addWord('OPIATE', 9, 4, false);
@@ -103,11 +112,9 @@ describe("Grid", function() {
 			var row = 7;
 			var horizontal = false;
 			grid.validateMove(word, col, row, horizontal).should.be.exactly(-1);
-			grid.addWord(word, col, row, horizontal);
-			// grid.print();
 		});
 
-		it.only("should score using lowercase as wildcard letters", function() {
+		it("should score using lowercase as wildcard letters", function() {
 			grid.addWord('OPIATE', 7, 2, false);
 			var word = 'DiRT';
 			var col = 8;
@@ -117,14 +124,43 @@ describe("Grid", function() {
 			grid.addWord(word, col, row, horizontal);
 		});
 
-		it.only("should score using lowercase as wildcard letters in an alt word", function() {
+		it("should score using lowercase as wildcard letters in an alt word", function() {
 			grid.addWord('OPIATE', 7, 2, false);
 			var word = 'dIRT';
 			var col = 8;
 			var row = 7;
 			var horizontal = false;
-			grid.validateMove(word, col, row, horizontal).should.be.exactly(7);
+			grid.validateMove(word, col, row, horizontal).should.be.exactly(5);
 			grid.addWord(word, col, row, horizontal);
 		});
+// |T  d   T   d  T|
+// | D   t   t   D |
+// |  D   dOG   D  |
+// |d  D   PO  D  d|
+// |    D  IRID    |
+// | t   t AEt   t |
+// |  d   dTD   d  |
+// |T  d   E   d  T|
+// |  d   d d   d  |
+// | t   t   t   t |
+// |    D     D    |
+// |d  D   d   D  d|
+// |  D   d d   D  |
+// | D   t   t   D |
+// |T  d   T   d  T|
+
+		it.only("should not score an invalid third parallel move", function() {
+			grid.addWord('OPIATE', 7, 2, false);
+			grid.addWord('IRID', 7, 4, true);
+			var word = 'GORED';
+			var col = 8;
+			var row = 2;
+			var horizontal = false;
+			grid.validateMove(word, col, row, horizontal).should.be.exactly(-1);
+			grid.addWord(word, col, row, horizontal);
+			grid.print();
+		});
+
+
 	});
 });

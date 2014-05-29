@@ -14,10 +14,11 @@ var lexicon;
 
 
 var problem = "A";
-var bag = "AIOIETPRTIRDDGNEOEDERUCERAAOIOEEFAHASZENKBBSTLRIURMSC?SFGLQETAIGEOYEAOOT?PVNUMLIJVWODNAIIAXLNEWNYUHT".toLowerCase().split("");
+var bag = "AIOIETPRTIRDDGNEOEDERUCERAAOIOEEFAHASZENKBBSTLRIURMSC?SFGLQETAIGEOYEAOOT?PVNUMLIJVWODNAIIAXLNEWNYUHT".split("");
 var rack = [];
-var alphabet = 'abcdefghijklmnopqrstuvwxyz'.split('');
-var COLUMNS = 'abcdefghijklmnopqrstuvwxyz'.toUpperCase().split('');
+var alphabet = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ'.split('');
+var lowerAlphabet = 'abcdefghijklmnopqrstuvwxyz'.split('');
+var COLUMNS = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ'.split('');
 var ROWS = [1,2,3,4,5,6,7,8,9,10,11,12,13,14,15];
 var scores = '1,3,3,2,1,4,2,4,1,8,5,1,3,1,1,3,10,1,1,1,1,4,4,8,4,10'.split(',').map(function(item){return parseInt(item)});
 var gridWidth = 15;
@@ -30,21 +31,25 @@ var fillRack = function() {
         rack.push(bag.shift());
     }
 }
-var removeFromRack = function(word, replacements) {
+
+var removeFromRack = function(r, word, replacements) {
+    // log('w ' + word);
     var letters = word.split('');
     replacements.forEach(function (letter) {
         letters.push('?');
     })
     letters.forEach(function (letter) {
-    // log("looking for " + letter + " in " + rack.join(","));
-        var index = rack.indexOf(letter);
+        // log("looking for " + letter + " in " + r.join(","));
+        var index = r.indexOf(letter);
         if (index == -1) {
             log("Error in rack")
-            throw "Invalid move error: " + letter + " not in " + rack.join(",") + " index: " + index;
+            throw "Invalid move error: " + letter + " not in " + r.join(",") + " index: " + index;
         }
-        rack.remove(index);
+        r.remove(index);
     });
+    return r;
 }
+
 var removeHookFromWord = function(hook, word, error) {
     if (hook == '')
         return word;
@@ -132,6 +137,12 @@ function score(word, rack, col, row, horizontal) {
     return score;
 }
 
+function rackLength(rack, word, hook) {
+    word.split('').forEach(function(letter) {
+        if (letter.)
+    });
+}
+
 function process() {
     log('ready to process');
 
@@ -142,7 +153,7 @@ function process() {
     // console.timeEnd('search2');
     var totalScore = 0;
     var foundWords = [];
-    var hookLetters = null;
+    var firstWord = true;
     // grid.wordH(2, 2, 'hello');
     // grid.wordV(2, 2, 'hello');
     // grid.print();
@@ -160,13 +171,13 @@ function process() {
         
         var word = null;
         var wordHook = null;
-        var longest = 0;
+        var wordScore = 0;
         var wordReplacements = null;
         var wordCol = 0;
         var wordRow = 0;
         var wordHorizontal = true;
 
-        if (hookLetters === null) {
+        if (firstWord) {
             col = 7;
             horizontal = false;
             for (row = 1; row < grid.size / 2; row++) {
@@ -177,9 +188,11 @@ function process() {
             for (col = 1; col < grid.size / 2; col++) {
                 processRack(rack, [], '', 0, true);
             }
+            firstWord = false;
         } else {
             var hookRow;
             var hookCol;
+            var hookLetters;
             for (row = 0; row < grid.size; row++) {
                 for (col = 0; col < grid.size; col++) {
                     horizontal = true;
@@ -212,21 +225,11 @@ function process() {
             };
         }
 
-        function testWord(hookLetters) {
-            // log('Hook word: ' + hookLetters.join(''));
-            hookLetters.forEach(function (hook, hookIndex) {
-                // log("Hook: " + hook + "@" + hookIndex);
-
-                processRack(rack, [], hook, hookIndex, false);
-
-            });
-		}
-
         function processRack(rack, replacements, hook, hookIndex, firstWord) {
             var index = rack.indexOf('?');
             if (index != -1) {
                 // log("Replace ? in rack: " + rack.join(""));
-                alphabet.forEach(function(letter) {
+                lowerAlphabet.forEach(function(letter) {
                     var filledRack = rack.slice(0);
                     filledRack[index] = letter;
                     var r = replacements.slice(0);
@@ -254,30 +257,35 @@ function process() {
                             itemRow -= item.indexOf(hook);
                         }
                     }
-                    // log("(" + col + ", " + row + ") item (" + itemCol + ", " + itemRow + ") " + item + " - " + hook + "@" + hookIndex);
 
-
-                    if (!grid.fits(itemCol,itemRow,horizontal,item, firstWord))
+                    if (!grid.fits(itemCol,itemRow,horizontal,item))
                         return;
 
-                    var tempItem = '' + item;
-                    replacements.forEach(function (letter) { tempItem = removeHookFromWord(letter, tempItem, false) });
-                    var itemScore = scoreLetters(tempItem.split(''), itemCol, itemRow, horizontal);
+                    // var tempItem = '' + item;
+                    // replacements.forEach(function (letter) { tempItem = removeHookFromWord(letter, tempItem, false) });
+                    // var itemScore = scoreLetters(tempItem.split(''), itemCol, itemRow, horizontal);
 
-                    if (itemScore > 0 && itemScore > longest) {
+                    // log("Rack: " + rack);
+
+                    // replacements.forEach(function (letter) { word = removeHookFromWord(letter, word, false) });
+                    var itemScore = grid.validateMove(item, itemCol, itemRow, horizontal, firstWord, rackLength(rack, letters, replacements, hook)).length);
+                    if (itemScore > 0)
+                        log("(" + col + ", " + row + ") item (" + itemCol + ", " + itemRow + ") " + item + " - " + hook + "@" + hookIndex + ' = ' + itemScore);
+
+                    if (itemScore > 0 && itemScore > wordScore) {
                         wordReplacements = replacements;
                         wordHook = hook;
                         word = item;
                         wordCol = itemCol;
                         wordRow = itemRow;
                         wordHorizontal = horizontal;
-                        longest = itemScore;
-                        log("  " + word + " " + wordHook);
+                        wordScore = itemScore;
+                        log("  " + word + " " + wordHook + " " + wordScore);
                     }
                 }, this);
         }
 
-
+        log('word: ' + word);
         if (!word || word.length == 0)
         {
             log("Reached end rack " + rack.join("") + " bag " + bag.length);
@@ -286,40 +294,37 @@ function process() {
         log("Scoring word: " + word + ' replacements: ' + wordReplacements + ' hook: ' + wordHook);
         var foundWord = word;
         wordReplacements.forEach(function (letter) { word = removeHookFromWord(letter, word, false) });
-        var scoreWord = word;
+        // var scoreWord = word;
         word = removeHookFromWord(wordHook, word);
         var wordRack = rack.slice(0).join('');
-        removeFromRack(word, wordReplacements);
-        wordScore = score(scoreWord, rack, wordCol, wordRow, wordHorizontal);
-        var position = ROWS[wordRow] + COLUMNS[wordCol] + "\t";
+        removeFromRack(rack, word, wordReplacements);
+        // wordScore = score(scoreWord, rack, wordCol, wordRow, wordHorizontal);
+        var position = ROWS[wordRow] + COLUMNS[wordCol];
         if (!horizontal) {
-            position = COLUMNS[wordCol] + ROWS[wordRow] + "\t";
+            position = COLUMNS[wordCol] + ROWS[wordRow];
         }
         if (wordHook) {
-            log(position + foundWord + " off letter " + wordHook + " using " + wordRack + " leftover letters " + rack.join("") + " scores " + wordScore);
+            log(position + ' ' + foundWord + " off hook " + wordHook + " using " + wordRack + " leftover letters " + rack.join("") + " scores " + wordScore);
         } else {
-            log(position + foundWord + " using " + wordRack + " leftover letters " + rack.join("") + " scores " + wordScore);
+            log(position + ' ' + foundWord + " using " + wordRack + " leftover letters " + rack.join("") + " scores " + wordScore);
         }
         totalScore += wordScore;
-        foundWords.push(foundWord);
-        hookLetters = foundWord.split('');
-        if (wordHorizontal)
-        	grid.wordH(wordCol, wordRow, foundWord);
-        else
-        	grid.wordV(wordCol, wordRow, foundWord);
+        foundWords.push([position, foundWord, wordScore]);
+        grid.addWord(foundWord, wordCol, wordRow, wordHorizontal);
         grid.print();
 
 
         // Setup for next word
-		horizontal = !wordHorizontal;
-        col = wordCol;
-		row = wordRow;
+		// horizontal = !wordHorizontal;
+  //       col = wordCol;
+		// row = wordRow;
 
         // log("Rack: " + rack.join(", "));
     }
     var bagScore = scoreLettersRaw(bag);
     var rackScore = scoreLettersRaw(rack);
     log("Total Score: " + totalScore  + " bagScore: -" + bagScore + " rackScore: -" + rackScore + " Final Score: " + (totalScore - bagScore - rackScore));
+    log('Result\na:\n' + foundWords.map(function(f) {return f.join(' ');}).join(',\n'));
 }
 
 var loader = new LexiconLoader();

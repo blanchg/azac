@@ -242,14 +242,14 @@ Grid.prototype.validateMove = function(word, col, row, horizontal, firstWord, ra
     var foundHook = false;
     var foundMiddle = false;
     var middleColRow = Math.floor(this.size / 2);
-    word.split('').forEach(function(letter, i) {
+    var failed = word.split('').some(function(letter, i) {
         var cellCol = horizontal?col+i:col;
         var cellRow = !horizontal?row+i:row;
         var rawCell = this.rawCell(cellCol, cellRow);
         
         // Outside of grid or word in place
         if (rawCell === null)
-            return;
+            return true;
 
         var cell = this.cell(cellCol, cellRow);
         if (cell === rawCell && cell === letter) {
@@ -270,21 +270,28 @@ Grid.prototype.validateMove = function(word, col, row, horizontal, firstWord, ra
             var suffix = this.suffix(cellCol, cellRow, !horizontal);
             // log('p ' + prefix + ' s ' + suffix);
             var altWord = prefix + letter + suffix;
-            log('alt word: ' + altWord);
             if (altWord.length > 1) {
 
+                log('alt word: ' + altWord);
 	            if (this.lexicon.findWord(altWord.toUpperCase())) {
 	            	altScore = this.scoreWord(prefix) + this.scoreWord(suffix) + (letterScore * letterMultiplier);
 	            	altScore *= wordMultiplier;
                     foundAltWord =  true;
-	            }
+	            } else {
+                    return true;
+                }
 	        }
 		}
 
-        log(rawCell + ' ' + letter + ' ' + letterScore + ' * ' + letterMultiplier + ' + ' + altScore + ' = ' + (letterScore * letterMultiplier + altScore));
+        // log(rawCell + ' ' + letter + ' ' + letterScore + ' * ' + letterMultiplier + ' + ' + altScore + ' = ' + (letterScore * letterMultiplier + altScore));
         totalScore += letterScore * letterMultiplier + altScore;
         totalWordMultiplier = totalWordMultiplier * wordMultiplier;
+
+        return false;
     }, this);
+
+    if (failed)
+        return -1;
 
     if (firstWord) {
         if (!foundMiddle) {

@@ -50,6 +50,7 @@ function LexiconLoader() {
                 if (index != -1) {
                     var words = data.substr(0,index).split(split);
                     totalWords += words.length;
+                    words = words.map(function(word) {return word.toUpperCase()});
                     data = data.substring(index + 1);
                     this.lexicon.addAll(words);
                     log("Added " + totalWords + " words");
