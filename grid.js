@@ -2,7 +2,7 @@ var log = require('./util.js').log;
 var clc = require('cli-color');
 var ansiTrim = require('cli-color/trim');
 
-var ALPHABET = 'abcdefghijklmnopqrstuvwxyz'.split('');
+var ALPHABET = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ'.split('');
 var LETTERSCORES = '1,3,3,2,1,4,2,4,1,8,5,1,3,1,1,3,10,1,1,1,1,4,4,8,4,10'.split(',').map(function(item){return parseInt(item)});
 
 function Grid(newSize) {
@@ -147,7 +147,7 @@ Grid.prototype.scoreWord = function(word) {
 Grid.prototype.scoreLetter = function(letter) {
     var score = LETTERSCORES[ALPHABET.indexOf(letter)];
     if (isNaN(score))
-        return;
+        return 0;
     return score;
 }
 
@@ -270,20 +270,18 @@ Grid.prototype.validateMove = function(word, col, row, horizontal, firstWord, ra
             var suffix = this.suffix(cellCol, cellRow, !horizontal);
             // log('p ' + prefix + ' s ' + suffix);
             var altWord = prefix + letter + suffix;
-            // log('alt word: ' + altWord);
+            log('alt word: ' + altWord);
             if (altWord.length > 1) {
 
-	            if (this.lexicon.findWord(altWord)) {
-	            	altScore = this.scoreWord(prefix) + this.scoreWord(suffix) + letterScore * letterMultiplier;
+	            if (this.lexicon.findWord(altWord.toUpperCase())) {
+	            	altScore = this.scoreWord(prefix) + this.scoreWord(suffix) + (letterScore * letterMultiplier);
 	            	altScore *= wordMultiplier;
                     foundAltWord =  true;
-	            } else {
-	            	// log('alt word: ' + altWord + ' not in lexicon');
 	            }
 	        }
 		}
 
-        // log(' ' + letter + ' ' + letterScore + ' * ' + letterMultiplier + ' + ' + altScore + ' cell ' + rawCell);
+        log(rawCell + ' ' + letter + ' ' + letterScore + ' * ' + letterMultiplier + ' + ' + altScore + ' = ' + (letterScore * letterMultiplier + altScore));
         totalScore += letterScore * letterMultiplier + altScore;
         totalWordMultiplier = totalWordMultiplier * wordMultiplier;
     }, this);
