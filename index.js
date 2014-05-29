@@ -1,7 +1,7 @@
 
-
+// var process = require('process');
 var log = require('./util.js').log;
-
+var fs = require('fs');
 var clc = require('cli-color');
 var ansiTrim = require('cli-color/trim');
 
@@ -12,6 +12,34 @@ var lexicon;
 
 // log("Must be run with --max-old-space-size=3000 to use the ENABLE lexicon especially if it hasn't been processed.")
 
+var problems = {
+    A: 'AIOIETPRTIRDDGNEOEDERUCERAAOIOEEFAHASZENKBBSTLRIURMSC?SFGLQETAIGEOYEAOOT?PVNUMLIJVWODNAIIAXLNEWNYUHT',
+    B: 'BMLUNNRESETO?AOSADTJUOWALITSNTEEDUIRAEAWECNBDTECPIOAYOSINKGERVOYAMIEPTRQEXFRAUVLFOEGEDIIA?HLZOHIIRGN',
+    C: 'CHHBUERLTJ?PFEXONFADERNRAZOVAEEIOVISWDTPYAEYIN?GENNDILKITOATMSIOEQAITCRILEDEOOGNWGSMRAUALUUEATEBROSI',
+    D: 'DEHERIOEGDPYOERICIAGFSMYUA?ENAEUFUTBONTRJAWLNITEEINMZNSIRIIPHISE?SQREOTOLEVATAGNCTABORWOAKLDDEOAUVLX',
+    E: 'E?AVCDNGTIEANJSSCOTLEIREMAEBDPOTLANIEAIWZDTSXRUIPEOONEGUFVIBUMEERIOLWIOAGYNDQ?ESATKYAUHHROEIRFAOTNRL',
+    F: 'FUOEEBS?ORI?ITARWIDUTATMETAAZQLYEEIMONLOIAVJUGFNAIRTOVEEACYIBPXSEHPEILDISLNRCGOUNHANWOEESDKONARRDEGT',
+    G: 'GZASFIOIDANNTAAOURMISLN?ONXDDAEEAOEREUFVUGO?HRIMWEOERKETIADRILECTIOEUIIANQNOYPSVEHEWJALREGCBTSPTBTLY',
+    H: 'HYAIEOEINE?LSIACATLTBEHMERWJWVOFENNRAAILTRQSSBNOEVUGDRCDOOENRUIORPEFYGAALAAKOOTDEIEDEIITPNGTZXU?IMSU',
+    I: 'IEOUOSNYHCJDEIA?WTTDEQDAZCXEABENAIUTALH?SANWLIIEANELIALREOUOSIUGVTESNEVNORGEFFOPRTEOTRDYRGOIMPBKAIMR',
+    J: 'JVUQENNWNDEARLAIOUEABZDIREAEBAATFNYOMEAIOT?HRRTAFEEETPOLSNADNIUMEKVGOOXOUWIG?SPYICTSSRTIOHLRCLIEIEDG',
+    K: 'KHEETWIOEWTMO?OIIACEDORF?VJASTRDNEBNOURQHEASOAYIODIEAIIUNZEULITLCRXGTARMEISVNYNUTAELGNADRESLOPBPEFGA',
+    L: 'LTUDELNVREITEOSSYBEUNRFA?SOI?DRIHETNUXOMEGPOWACOAIERNTAOJTDIRAVLIWHARDTAGNNEALBUMZGISAPIEEECQIOEKFOY',
+    M: 'MWLTAFEUEIETAIAXYAOTONNCRFEWAEI?DPEEICIREHILKRZNSJOIDDUYLIBSAHTAAIRNETOUQTOLEDR?GSEPOAUBSGVVRNOOGEMN',
+    N: 'NARNNMSAAPHCOERRUHAOOIIIEIEKTTAGODUAFOITEDSFDYOOEEGRJENDSIGCLIEITAPQLUME?LRRVBINXTETOL?EWVEANBUZYSWA',
+    O: 'OETZNIIASEEUHDWDMCTRGOIQDIUNAOOEAEPTWNHENYRINOEDPVRLIIIATATCMV?BNASALBFYSOEIUXELERTEUARORKASOFJL?GGE',
+    P: 'PEEEENELAJCOOIUNSFIROIEESTBADVMIYWHTRXOULZEGATIECWN?OINE?UMIIBGDVRORAASSOLEPDUATHTREGLQNFATOIAKDRANY',
+    Q: 'QDSEEOEUUHONGLWRA?ELITRDLNXRMADEZCANYOEOTTAIBVYAEGORNHBTINROPIFSDIMEIGTITNOKSEALOVICFISRAEAJ?UWEPAEU',
+    R: 'ROTFMAATIAIAGJLAASP?GUUECTNRRIOLRVMYVGASNOXEFDIIDHSOTWZTRNEOIEBAIYEIULDOPSHNWKR?EALENUNOQECEDEEEOTIB',
+    S: 'SQOJDGAHIAAIBXCYCII?DERLUZSNI?IDNNMRGPMELEKOFGYLOWETVNNOVEOBOLUFRUTNHEOETAITSAAOWEAIRIDUATREAESTEERP',
+    T: 'TCWIMNVOTAOKRANEZVGIEFOWOURFNXDAOHAIL?GEGEALTRRESICHLAENM?TOSNAUTNSEYDQYJBAAEEDSEIOERTOPDLUIEPIRBIUI',
+    U: 'UFTUNTSIAR?COZTEMGRJIRMKRDEHLVIAEGEAXIEDAO?OOPTPBBFNYORARHCINIWEEWTGOSEAANLSTUUAELEINYAONEEOIVLQISDD',
+    V: 'VRETPMPEVAAEEHTCOTENMEIIUWSIOZGARILOGAEIFEOWA?DQAYYIDONOFTXRRELURANSTCOLKTEENJGUOBIR?USANLDHAIIBNEDS',
+    W: 'WAAVROAYAIIERNTTRIINOXOEPUOLHLGTITAEADDERBOSEROT?ONDECL?GTEUVILJZNQSKMSIEEUIEWAUCSINPDGEEARBYFFHNAOM',
+    X: 'XPENAHAEAEWTLTRQDVNJTDHIR?SMUTOIITMNEAZETERBOUWROIOERALRFUSBKIECLLEOEDIAYFNOGEOUA?SIAINIESDGCYPGVNOA',
+    Y: 'YEEAWRUVENLDSSTTZUEABOTIROOAAAONRIMDQFGDRXJGOYLLITTRFITEGSEE?SPBURHHEOANLAECDNOUCENEIWIIMEP?AAIVINKO',
+    Z: 'ZQSELYRKALAFEBVFRUSHND?UE?REAAEITIGNALOURRAVGOTTXSOOYDMPOSAIEIIAEOIPRHEEETNTCBNMDUGDIJIOWLTCIEOENWNA'
+}
 
 var problem = "A";
 var bag = "AIOIETPRTIRDDGNEOEDERUCERAAOIOEEFAHASZENKBBSTLRIURMSC?SFGLQETAIGEOYEAOOT?PVNUMLIJVWODNAIIAXLNEWNYUHT".split("");
@@ -137,13 +165,60 @@ function score(word, rack, col, row, horizontal) {
     return score;
 }
 
+// rack and hook should be arrays
+// word is a string
 function rackLength(rack, word, hook) {
-    word.split('').forEach(function(letter) {
-        if (letter.)
+    var result = reduceRack(rack, word, hook);
+    if (result)
+        return result.length;
+    else 
+        return -1;
+}
+function reduceRack(rack, word, hook, debug) {
+    if (debug)
+        log("input hook: " + hook);
+    var failed = word.split('').some(function(letter) {
+        if (letter === letter.toLowerCase())
+            return false;
+        var index = hook.indexOf(letter);
+        if (index !== -1) {
+            hook.splice(index,1);
+            if (debug)
+                log('h ' + hook + " took " + letter);
+            return false;
+        }
+        index = rack.indexOf(letter);
+        if (index === -1) {
+            if (debug)
+                log("Rack " + rack + " doesn't have " + letter + " from word " + word + " hook " + hook)
+            return true;
+        } else {
+            rack.splice(index,1);
+        }
+        return false;
     });
+    if (failed)
+    {
+        return null;
+    } else {
+        return rack;
+    }
 }
 
-function process() {
+function saveProgress(grid, foundWords) {
+
+    log('Saving the progress for later');
+    console.time('write');
+    var output = '\n';
+    grid.print(function(data) { output += data + '\n';});
+
+    output += 'Result\n' + problem + ':\n' + foundWords.map(function(f) {return f.join(' ');}).join(',\n');
+    fs.writeFileSync(problem + '.log', output, {encoding:'utf8'});
+    console.timeEnd('write');
+}
+
+function processAll() {
+try {
     log('ready to process');
 
     // console.time('search2');
@@ -162,12 +237,13 @@ function process() {
 
     // log("0,0: " + (board.cell(0,0) == 'T'));
     grid.print();
+    grid.lexicon = lexicon;
     var col = 3;
     var row = 7;
-    var horizontal = true;
     while (bag.length > 0 || rack.length > 0)
     {
         fillRack();
+        log('Starting Rack: ' + rack);
         
         var word = null;
         var wordHook = null;
@@ -179,14 +255,12 @@ function process() {
 
         if (firstWord) {
             col = 7;
-            horizontal = false;
             for (row = 1; row < grid.size / 2; row++) {
-                processRack(rack, [], '', 0, true);
+                processRack(rack, [], '', firstWord, false);
             };
-            horizontal = true;
             row = 7;
             for (col = 1; col < grid.size / 2; col++) {
-                processRack(rack, [], '', 0, true);
+                processRack(rack, [], '', firstWord, true);
             }
             firstWord = false;
         } else {
@@ -195,7 +269,6 @@ function process() {
             var hookLetters;
             for (row = 0; row < grid.size; row++) {
                 for (col = 0; col < grid.size; col++) {
-                    horizontal = true;
                     hookCol = col;
                     hookLetters = [];
                     for (hookRow = row; hookRow < grid.size; hookRow++) {
@@ -207,8 +280,7 @@ function process() {
                             hookLetters.push(rawCell);
                         }
                     };
-                    processRack(rack.slice(0), [], hookLetters.join(''), 0, false);
-                    horizontal = false;
+                    processRack(rack.slice(0), [], hookLetters.join(''), firstWord, false);
                     hookRow = row;
                     hookLetters = [];
                     for (hookCol = col; hookCol < grid.size; hookCol++) {
@@ -220,21 +292,22 @@ function process() {
                             hookLetters.push(rawCell);
                         }
                     };
-                    processRack(rack.slice(0), [], hookLetters.join(''), 0, false);
+                    processRack(rack.slice(0), [], hookLetters.join(''), firstWord, true);
                 }
             };
         }
 
-        function processRack(rack, replacements, hook, hookIndex, firstWord) {
+        function processRack(rack, replacements, hook, firstWord, horizontal) {
+            // log("process hook " + hook);
             var index = rack.indexOf('?');
             if (index != -1) {
-                // log("Replace ? in rack: " + rack.join(""));
+                log("Replace ? in rack: " + rack.join(""));
                 lowerAlphabet.forEach(function(letter) {
                     var filledRack = rack.slice(0);
                     filledRack[index] = letter;
                     var r = replacements.slice(0);
                     r.push(letter);
-                    processRack(filledRack, r);
+                    processRack(filledRack, r, hook, firstWord, horizontal);
                 });
                 return;
             }
@@ -248,15 +321,15 @@ function process() {
                 function (item) {
                     var itemCol = col;
                     var itemRow = row;
-                    if (hook.length > 0) {
-                        if (horizontal) { // This is horizontal so previous was vertical so work off row
-                            itemCol -= item.indexOf(hook);
-                            itemRow = row + hookIndex;
-                        } else {
-                            itemCol = col + hookIndex;
-                            itemRow -= item.indexOf(hook);
-                        }
-                    }
+                    // if (hook.length > 0) {
+                    //     if (horizontal) { // This is horizontal so previous was vertical so work off row
+                    //         itemCol -= item.indexOf(hook);
+                    //         itemRow = row + hookIndex;
+                    //     } else {
+                    //         itemCol = col + hookIndex;
+                    //         itemRow -= item.indexOf(hook);
+                    //     }
+                    // }
 
                     if (!grid.fits(itemCol,itemRow,horizontal,item))
                         return;
@@ -265,12 +338,10 @@ function process() {
                     // replacements.forEach(function (letter) { tempItem = removeHookFromWord(letter, tempItem, false) });
                     // var itemScore = scoreLetters(tempItem.split(''), itemCol, itemRow, horizontal);
 
-                    // log("Rack: " + rack);
-
-                    // replacements.forEach(function (letter) { word = removeHookFromWord(letter, word, false) });
-                    var itemScore = grid.validateMove(item, itemCol, itemRow, horizontal, firstWord, rackLength(rack, letters, replacements, hook)).length);
+                    var leftOver = rackLength(rack.slice(0), item, hook.split(''));
+                    var itemScore = grid.validateMove(item, itemCol, itemRow, horizontal, firstWord, leftOver);
                     if (itemScore > 0)
-                        log("(" + col + ", " + row + ") item (" + itemCol + ", " + itemRow + ") " + item + " - " + hook + "@" + hookIndex + ' = ' + itemScore);
+                        log("(" + itemCol + ", " + itemRow + ") " + (horizontal?'h ':'v ') + item + " - " + hook + ' = ' + itemScore);
 
                     if (itemScore > 0 && itemScore > wordScore) {
                         wordReplacements = replacements;
@@ -280,7 +351,7 @@ function process() {
                         wordRow = itemRow;
                         wordHorizontal = horizontal;
                         wordScore = itemScore;
-                        log("  " + word + " " + wordHook + " " + wordScore);
+                        log('^^^^^^ best so far');
                     }
                 }, this);
         }
@@ -291,28 +362,31 @@ function process() {
             log("Reached end rack " + rack.join("") + " bag " + bag.length);
             break;
         }
-        log("Scoring word: " + word + ' replacements: ' + wordReplacements + ' hook: ' + wordHook);
-        var foundWord = word;
-        wordReplacements.forEach(function (letter) { word = removeHookFromWord(letter, word, false) });
+        // log("Scoring word: " + word + ' replacements: ' + wordReplacements + ' hook: ' + wordHook);
+        // var foundWord = word;
+        // wordReplacements.forEach(function (letter) { word = removeHookFromWord(letter, word, false) });
         // var scoreWord = word;
-        word = removeHookFromWord(wordHook, word);
+        // word = removeHookFromWord(wordHook, word);
         var wordRack = rack.slice(0).join('');
-        removeFromRack(rack, word, wordReplacements);
+        // removeFromRack(rack, word, wordReplacements);
         // wordScore = score(scoreWord, rack, wordCol, wordRow, wordHorizontal);
+        rack = reduceRack(rack.slice(0), word, wordHook.split(''), true);
         var position = ROWS[wordRow] + COLUMNS[wordCol];
-        if (!horizontal) {
+        if (!wordHorizontal) {
             position = COLUMNS[wordCol] + ROWS[wordRow];
         }
+        var remainingRack = rack.join('');
         if (wordHook) {
-            log(position + ' ' + foundWord + " off hook " + wordHook + " using " + wordRack + " leftover letters " + rack.join("") + " scores " + wordScore);
+            log(position + ' ' + word + " off hook " + wordHook + " using " + wordRack + " leftover letters " + remainingRack + " scores " + wordScore);
         } else {
-            log(position + ' ' + foundWord + " using " + wordRack + " leftover letters " + rack.join("") + " scores " + wordScore);
+            log(position + ' ' + word + " using " + wordRack + " leftover letters " + remainingRack + " scores " + wordScore);
         }
         totalScore += wordScore;
-        foundWords.push([position, foundWord, wordScore]);
-        grid.addWord(foundWord, wordCol, wordRow, wordHorizontal);
+        log('total: ' + totalScore);
+        foundWords.push([position, word, wordScore]);
+        grid.addWord(word, wordCol, wordRow, wordHorizontal);
         grid.print();
-
+        saveProgress(grid, foundWords);
 
         // Setup for next word
 		// horizontal = !wordHorizontal;
@@ -324,11 +398,26 @@ function process() {
     var bagScore = scoreLettersRaw(bag);
     var rackScore = scoreLettersRaw(rack);
     log("Total Score: " + totalScore  + " bagScore: -" + bagScore + " rackScore: -" + rackScore + " Final Score: " + (totalScore - bagScore - rackScore));
-    log('Result\na:\n' + foundWords.map(function(f) {return f.join(' ');}).join(',\n'));
+
+} finally {
+    log('Result\n' + problem + ':\n' + foundWords.map(function(f) {return f.join(' ');}).join(',\n'));
+}
 }
 
+
+if (process.argv.length > 2) {
+    problem = process.argv[2].toUpperCase();
+    bag = problems[problem].split('');
+    if (bag === null) {
+        log('Please supply a letter A-Z');
+        process.exit(1);
+    }
+    log('Problem: ' + problem);
+    log('Bag: ' + bag);
+
+}
 var loader = new LexiconLoader();
 loader.load((function(l) {
     lexicon = l;
-    process()
+    processAll();
 }).bind(this));

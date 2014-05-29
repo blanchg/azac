@@ -98,8 +98,14 @@ describe('Gaddag', function() {
 				.should.containDeep(['bla'])
 				.and.have.lengthOf(1);
 		});
-		it.skip ('should find word must cross hook', function() {
-			gaddag.findWordsWithRackAndHook('bat'.split(''), '????r????')
+		// it.skip ('should find word must cross hook', function() {
+		// 	gaddag.findWordsWithRackAndHook('bat'.split(''), '????r????')
+		// 		.should
+		// 			// .containDeep(['bla'])
+		// 			.and.have.lengthOf(0);
+		// });
+		it('should not find word in hook only', function() {
+			gaddag.findWordsWithRackAndHook('r'.split(''), 'bat???')
 				.should
 					// .containDeep(['bla'])
 					.and.have.lengthOf(0);

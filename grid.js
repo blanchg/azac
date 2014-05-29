@@ -36,6 +36,8 @@ function Grid(newSize) {
         this.board.split('')
             .forEach(function(letter, index) {
                 // log("Letter " + letter + " at " + index);
+                if (letter == ' ')
+                	letter = '·';
                 this[index] = clc.bold(letter);
             }, this);
     }
@@ -127,10 +129,18 @@ Grid.prototype.cell = function(col, row) {
     return ansiTrim(this[i]);
 }
 
-Grid.prototype.print = function () {
+Grid.prototype.print = function (target) {
+	var trim = false;
+	if (!target) {
+		target = log;
+		trim = true;
+	}
     var i = 0;
     for (var x = 0; x < this.size; x++) {
-        log('|' + this.slice(x * this.size,x*this.size + this.size).join('') + '|');
+    	var line = '|' + this.slice(x * this.size,x*this.size + this.size).join('') + '|';
+    	if (trim)
+    		line = ansiTrim(line);
+        target(line);
     };
 }
 
@@ -242,6 +252,7 @@ Grid.prototype.validateMove = function(word, col, row, horizontal, firstWord, ra
     var foundHook = false;
     var foundMiddle = false;
     var middleColRow = Math.floor(this.size / 2);
+    var letterPlaced = false;
     var failed = word.split('').some(function(letter, i) {
         var cellCol = horizontal?col+i:col;
         var cellRow = !horizontal?row+i:row;
@@ -254,6 +265,9 @@ Grid.prototype.validateMove = function(word, col, row, horizontal, firstWord, ra
         var cell = this.cell(cellCol, cellRow);
         if (cell === rawCell && cell === letter) {
             foundHook = true;
+        }
+        if (cell !== rawCell) {
+        	letterPlaced = true;
         }
 
         if (cellCol === middleColRow && cellRow === middleColRow) {
@@ -272,12 +286,13 @@ Grid.prototype.validateMove = function(word, col, row, horizontal, firstWord, ra
             var altWord = prefix + letter + suffix;
             if (altWord.length > 1) {
 
-                log('alt word: ' + altWord);
+                // log('alt word: ' + altWord);
 	            if (this.lexicon.findWord(altWord.toUpperCase())) {
 	            	altScore = this.scoreWord(prefix) + this.scoreWord(suffix) + (letterScore * letterMultiplier);
 	            	altScore *= wordMultiplier;
                     foundAltWord =  true;
 	            } else {
+	            	// log("FAIL THIS WORD BECAUSE ALT WORD " + altWord + " DOESN'T EXIST");
                     return true;
                 }
 	        }
@@ -292,6 +307,10 @@ Grid.prototype.validateMove = function(word, col, row, horizontal, firstWord, ra
 
     if (failed)
         return -1;
+
+    if (!letterPlaced) {
+    	return -1;
+    }
 
     if (firstWord) {
         if (!foundMiddle) {

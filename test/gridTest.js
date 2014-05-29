@@ -149,11 +149,22 @@ describe("Grid", function() {
 // | D   t   t   D |
 // |T  d   T   d  T|
 
-		it.only("should not score an invalid third parallel move", function() {
+		it("should not score an invalid third parallel move", function() {
 			grid.addWord('OPIATE', 7, 2, false);
 			grid.addWord('IRID', 7, 4, true);
 			var word = 'GORED';
 			var col = 8;
+			var row = 2;
+			var horizontal = false;
+			grid.validateMove(word, col, row, horizontal).should.be.exactly(-1);
+			grid.addWord(word, col, row, horizontal);
+			// grid.print();
+		});
+
+		it("should not score no letters used", function() {
+			grid.addWord('OPIATE', 7, 2, false);
+			var word = 'OPIATE';
+			var col = 7;
 			var row = 2;
 			var horizontal = false;
 			grid.validateMove(word, col, row, horizontal).should.be.exactly(-1);

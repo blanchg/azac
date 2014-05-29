@@ -153,13 +153,13 @@ Gaddag.prototype.findWordsWithRackAndHook = function (rack, hook) {
         //     hook = hook.split('');
         // }
         if (hook.indexOf('?') != -1) {
-            this.searchGaps(hook, rack.slice(0), trie, words);
+            this.searchGaps(hook, rack.slice(0), trie, words, false);
             while (hook[0] == '?') {
                 hook = hook.substr(1);
-                this.searchGaps(hook, rack.slice(0), trie, words);
+                this.searchGaps(hook, rack.slice(0), trie, words, false);
             }
         } else {
-            this.findWordsWithPart(hook, trie, rack, words);
+            this.findWordsWithPart(hook, trie, rack, words, false);
         }
     } else {
         this.findWordsRecurse("", rack, hook, trie, 'reverse', words);
@@ -168,7 +168,7 @@ Gaddag.prototype.findWordsWithRackAndHook = function (rack, hook) {
     return words.unique();
 }
 
-Gaddag.prototype.searchGaps = function(hook, searchRack, trie, words) {
+Gaddag.prototype.searchGaps = function(hook, searchRack, trie, words, rackUsed) {
         // log('Hook: ' + hook + " rack: " + searchRack + ' words ' + words);
     var index = hook.indexOf('?');
     // log('Index: ' + index);
@@ -176,7 +176,7 @@ Gaddag.prototype.searchGaps = function(hook, searchRack, trie, words) {
         if (index != 0) {
             // Find words up to the next gap
             // log('Finding words with ' + hook.substr(0, index));
-            this.findWordsWithPart(hook.substr(0, index), trie, [], words);
+            this.findWordsWithPart(hook.substr(0, index), trie, [], words, rackUsed);
             // log('words: ' + words);
         }
         if (searchRack.length == 0) {
@@ -192,15 +192,15 @@ Gaddag.prototype.searchGaps = function(hook, searchRack, trie, words) {
             hook = hookArray.join('');
             tempRack.splice(i, 1);
             // log('hook: ' + hook + ' temp rack: ' + tempRack);
-            this.searchGaps(hook.slice(0), tempRack, trie, words);
+            this.searchGaps(hook.slice(0), tempRack, trie, words, true);
         }, this);
     } else {
         // log('searching ' + hook + JSON.stringify(trie));
-        this.findWordsWithPart(hook.slice(0), trie, [], words); //searchRack.slice(0)
+        this.findWordsWithPart(hook.slice(0), trie, [], words, rackUsed); //searchRack.slice(0)
     }
 }
 
-Gaddag.prototype.findWordsWithPart = function(hook, trie, rack, words) {
+Gaddag.prototype.findWordsWithPart = function(hook, trie, rack, words, rackUsed) {
     // log('trie ' + JSON.stringify(trie));
     var searchTrie = this.findSuffix(hook, trie);
     // log('searchtrie ' + JSON.stringify(trie));
@@ -214,7 +214,7 @@ Gaddag.prototype.findWordsWithPart = function(hook, trie, rack, words) {
         if (rack.length == 0)
         {
             // log('searching with no rack using hook ' + hook + ' ' + JSON.stringify(searchTrie));
-            if (searchTrie === 0 || searchTrie['$'] === 0) {
+            if (rackUsed && (searchTrie === 0 || searchTrie['$'] === 0)) {
                 // log('WORD FOUND');
                 words.push(hook);
             }
