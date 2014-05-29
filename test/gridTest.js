@@ -56,13 +56,13 @@ describe("Grid", function() {
 			// log("Gaddag trie " + gaddag.trie === grid.lexicon.trie)
 		});
 
-		it.skip("should score a valid first move", function() {
+		it("should score a valid first move", function() {
 			grid.validateMove('opiate', 7, 2, false, true).should.be.exactly(22);
 		});
-		it.skip("should not score an invalid first move", function() {
+		it("should not score an invalid first move", function() {
 			grid.validateMove('opiate', 6, 2, false, true).should.be.exactly(-1);
 		});
-		it.skip("should score a valid second hook move", function() {
+		it("should score a valid second hook move", function() {
 			grid.addWord('opiate', 7, 2, false);
 			grid.validateMove('dirt', 6, 4, true, false).should.be.exactly(5);
 			// grid.addWord('dirt', 6, 4, true);
@@ -77,7 +77,7 @@ describe("Grid", function() {
 			var horizontal = false;
 			grid.validateMove(word, col, row, horizontal).should.be.exactly(9);
 			grid.addWord(word, col, row, horizontal);
-			grid.print();
+			// grid.print();
 		});
 		it("should score a middle parallel move", function() {
 			grid.addWord('opiate', 7, 2, false);
@@ -89,7 +89,19 @@ describe("Grid", function() {
 			var horizontal = false;
 			grid.validateMove(word, col, row, horizontal).should.be.exactly(15);
 			grid.addWord(word, col, row, horizontal);
-			grid.print();
+			// grid.print();
+		});
+
+
+		it("should not score an invalid second parallel move", function() {
+			grid.addWord('opiate', 7, 2, false);
+			var word = 'dirt';
+			var col = 9;
+			var row = 7;
+			var horizontal = false;
+			grid.validateMove(word, col, row, horizontal).should.be.exactly(-1);
+			grid.addWord(word, col, row, horizontal);
+			// grid.print();
 		});
 	});
 });

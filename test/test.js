@@ -3,12 +3,14 @@ var should = require("should");
 var log = require("../util.js").log;
 
 var Gaddag = require('../gaddag.js').Gaddag;
+var Trie = require('../trie.js').Trie;
 
-var gaddag = null;
 
 // console.log(JSON.stringify(gaddag.getTrie(), null, 2));
 
 describe('Gaddag', function() {
+	var gaddag = null;
+
 	beforeEach(function() {
 		gaddag = new Gaddag();
 
@@ -19,12 +21,14 @@ describe('Gaddag', function() {
 	});
 
 	it('should allow multiple instances', function() {
+		// var t = new Trie();
 		var gd2 = new Gaddag();
 		// log('gaddag ' + gaddag.getTrie());
 		// log('gd2    ' + gd2.getTrie());
-		// gaddag.getTrie().should.not.be.exactly(gd2.getTrie());
+		gaddag.getTrie().should.not.be.exactly(gd2.getTrie());
 		gd2.findWord('bat').should.be.false;
-	})
+		gaddag.findWord('bat').should.be.true;
+	});
 
 	it('find word', function() {
 		gaddag.findWord('bating').should.be.ok;
