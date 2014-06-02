@@ -170,7 +170,7 @@ Gaddag.prototype.findWordsWithRackAndHook = function (rack, hook) {
 }
 
 Gaddag.prototype.searchGaps = function(hook, searchRack, trie, words, rackUsed) {
-        log('Hook: ' + hook + " rack: " + searchRack + ' words ' + words);
+        // log('Hook: ' + hook + " rack: " + searchRack + ' words ' + words);
     var index = hook.indexOf('?');
     // log('Index: ' + index);
     if (index != -1) {
@@ -185,14 +185,14 @@ Gaddag.prototype.searchGaps = function(hook, searchRack, trie, words, rackUsed) 
         }
 
         searchRack.forEach(function (rackLetter, i) {
-            log('  rack letter ' + rackLetter + ' index ' + index + ' rack ' + searchRack);
+            // log('  rack letter ' + rackLetter + ' index ' + index + ' rack ' + searchRack);
             var tempRack = searchRack.slice(0);
-            log('temp rack: ' + tempRack[i]);
+            // log('temp rack: ' + tempRack[i]);
             var hookArray = hook.split('');
             hookArray[index] = tempRack[i];
             hook = hookArray.join('');
             tempRack.splice(i, 1);
-            log('hook: ' + hook + ' temp rack: ' + tempRack);
+            // log('hook: ' + hook + ' temp rack: ' + tempRack);
             this.searchGaps(hook.slice(0), tempRack, trie, words, true);
         }, this);
     } else {
@@ -202,31 +202,26 @@ Gaddag.prototype.searchGaps = function(hook, searchRack, trie, words, rackUsed) 
 }
 
 Gaddag.prototype.findWordsWithPart = function(hook, trie, rack, words, rackUsed) {
-    log('trie ' + JSON.stringify(trie, null, 2));
+    // log('trie ' + JSON.stringify(trie));
     var searchTrie = this.findSuffix(hook, trie);
-    log('searchtrie ' + JSON.stringify(searchTrie, null, 2));
+    // log('searchtrie ' + JSON.stringify(trie));
     if (searchTrie) {
-
-        // rack.forEach(function(h) {
-        //     log('h ' + h + ' hook ' + hook + ' rack ' + rack);
-        //     this.findWordsRecurse(hook, rack, h, searchTrie, direction, words);
-        // }, this);
         var direction = 'reverse';
         if (searchTrie['>'] !== undefined) {
             direction = 'forward';
             searchTrie = searchTrie['>'];
         }
-        log('search trie ' + JSON.stringify(searchTrie));
+        // log('search trie ' + JSON.stringify(searchTrie));
         if (rack.length == 0)
         {
-            log('searching with no rack using hook ' + hook + ' ' + JSON.stringify(searchTrie));
+            // log('searching with no rack using hook ' + hook + ' ' + JSON.stringify(searchTrie));
             if (rackUsed && (searchTrie === 0 || searchTrie['$'] === 0)) {
-                log('WORD FOUND: ' + hook);
+                // log('WORD FOUND');
                 words.push(hook);
             }
         } else {
             rack.forEach(function(h) {
-                log('h ' + h + ' hook ' + hook + ' rack ' + rack);
+                // log('h ' + h + ' hook ' + hook + ' rack ' + rack);
                 this.findWordsRecurse(hook, rack, h, searchTrie, direction, words);
             }, this);
         }
@@ -238,10 +233,10 @@ Gaddag.prototype.findSuffix = function(suffix, trie) {
     // if (typeof(suffix) != 'string')
     //     suffix = suffix.join('');
     suffix.split('').reverse().some(function(letter) {
-        log('suffix letter ' + letter);
+        // log('suffix letter ' + letter);
         if (typeof search === 'undefined') return true;
         search = search[letter.toUpperCase()];
-        log('suffix trie ' + JSON.stringify(search));
+        // log('suffix trie ' + JSON.stringify(search));
         return false;
     }, this);
     return search;
@@ -262,9 +257,9 @@ Gaddag.prototype.findPrefix = function(prefix, trie) {
 Gaddag.prototype.findWordsRecurse = function(word, rack, hook, cur, direction, words) {
     // log("this " + this);
     var hookNode = cur[ hook.toUpperCase() ];
-    log('hookNode ' + JSON.stringify(hookNode));
+    // log('hookNode ' + JSON.stringify(hookNode));
     if (typeof hookNode === 'undefined') return;
-    log('sep ' + this.separator);
+    // log('sep ' + this.separator);
 
     var hookCh = (hook === this.separator || hook === "$" ? '' : hook);
     word = (direction === "reverse" ? hookCh + word : word + hookCh);

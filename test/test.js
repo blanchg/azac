@@ -138,7 +138,7 @@ describe('Gaddag', function() {
 					.and.have.lengthOf(2);
 		});
 
-		it.only('should find advance with uppercase but preserve lowercase', function() {
+		it('should find advance with uppercase but preserve lowercase', function() {
 			gaddag = new Gaddag();
 
 			gaddag.add('ADV');
