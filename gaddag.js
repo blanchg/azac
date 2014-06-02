@@ -170,7 +170,7 @@ Gaddag.prototype.findWordsWithRackAndHook = function (rack, hook) {
 }
 
 Gaddag.prototype.searchGaps = function(hook, searchRack, trie, words, rackUsed) {
-        // log('Hook: ' + hook + " rack: " + searchRack + ' words ' + words);
+        log('Hook: ' + hook + " rack: " + searchRack + ' words ' + words);
     var index = hook.indexOf('?');
     // log('Index: ' + index);
     if (index != -1) {
@@ -185,14 +185,14 @@ Gaddag.prototype.searchGaps = function(hook, searchRack, trie, words, rackUsed) 
         }
 
         searchRack.forEach(function (rackLetter, i) {
-            // log('  rack letter ' + rackLetter + ' index ' + index + ' rack ' + searchRack);
+            log('  rack letter ' + rackLetter + ' index ' + index + ' rack ' + searchRack);
             var tempRack = searchRack.slice(0);
-            // log('temp rack: ' + tempRack[i]);
+            log('temp rack: ' + tempRack[i]);
             var hookArray = hook.split('');
             hookArray[index] = tempRack[i];
             hook = hookArray.join('');
             tempRack.splice(i, 1);
-            // log('hook: ' + hook + ' temp rack: ' + tempRack);
+            log('hook: ' + hook + ' temp rack: ' + tempRack);
             this.searchGaps(hook.slice(0), tempRack, trie, words, true);
         }, this);
     } else {
@@ -202,26 +202,31 @@ Gaddag.prototype.searchGaps = function(hook, searchRack, trie, words, rackUsed) 
 }
 
 Gaddag.prototype.findWordsWithPart = function(hook, trie, rack, words, rackUsed) {
-    // log('trie ' + JSON.stringify(trie));
-    var searchTrie = this.findSuffix(hook.toUpperCase(), trie);
-    // log('searchtrie ' + JSON.stringify(trie));
+    log('trie ' + JSON.stringify(trie, null, 2));
+    var searchTrie = this.findSuffix(hook, trie);
+    log('searchtrie ' + JSON.stringify(searchTrie, null, 2));
     if (searchTrie) {
+
+        // rack.forEach(function(h) {
+        //     log('h ' + h + ' hook ' + hook + ' rack ' + rack);
+        //     this.findWordsRecurse(hook, rack, h, searchTrie, direction, words);
+        // }, this);
         var direction = 'reverse';
         if (searchTrie['>'] !== undefined) {
             direction = 'forward';
             searchTrie = searchTrie['>'];
         }
-        // log('search trie ' + JSON.stringify(searchTrie));
+        log('search trie ' + JSON.stringify(searchTrie));
         if (rack.length == 0)
         {
-            // log('searching with no rack using hook ' + hook + ' ' + JSON.stringify(searchTrie));
+            log('searching with no rack using hook ' + hook + ' ' + JSON.stringify(searchTrie));
             if (rackUsed && (searchTrie === 0 || searchTrie['$'] === 0)) {
-                // log('WORD FOUND');
+                log('WORD FOUND: ' + hook);
                 words.push(hook);
             }
         } else {
             rack.forEach(function(h) {
-                // log('h ' + h + ' hook ' + hook + ' rack ' + rack);
+                log('h ' + h + ' hook ' + hook + ' rack ' + rack);
                 this.findWordsRecurse(hook, rack, h, searchTrie, direction, words);
             }, this);
         }
@@ -233,10 +238,10 @@ Gaddag.prototype.findSuffix = function(suffix, trie) {
     // if (typeof(suffix) != 'string')
     //     suffix = suffix.join('');
     suffix.split('').reverse().some(function(letter) {
-        // log('suffix letter ' + letter);
+        log('suffix letter ' + letter);
         if (typeof search === 'undefined') return true;
-        search = search[letter];
-        // log('suffix trie ' + JSON.stringify(search));
+        search = search[letter.toUpperCase()];
+        log('suffix trie ' + JSON.stringify(search));
         return false;
     }, this);
     return search;
@@ -248,7 +253,7 @@ Gaddag.prototype.findPrefix = function(prefix, trie) {
         if (typeof search === 'undefined') return true;
         if (search['>'])
             search = search['>'];
-        search = search[letter];
+        search = search[letter.toUpperCase()];
         return false;
     }, this);
     return search;
@@ -256,10 +261,10 @@ Gaddag.prototype.findPrefix = function(prefix, trie) {
 
 Gaddag.prototype.findWordsRecurse = function(word, rack, hook, cur, direction, words) {
     // log("this " + this);
-    var hookNode = cur[ hook ];
-    // log('hookNode ' + JSON.stringify(hookNode));
+    var hookNode = cur[ hook.toUpperCase() ];
+    log('hookNode ' + JSON.stringify(hookNode));
     if (typeof hookNode === 'undefined') return;
-    // log('sep ' + this.separator);
+    log('sep ' + this.separator);
 
     var hookCh = (hook === this.separator || hook === "$" ? '' : hook);
     word = (direction === "reverse" ? hookCh + word : word + hookCh);
@@ -291,12 +296,13 @@ Gaddag.prototype.findWordsRecurse = function(word, rack, hook, cur, direction, w
 
 Gaddag.prototype.processRack = function(word, rack, nodeKey, hookNode, direction, words) {
     for (var i = 0; i < rack.length; i++) {
-        if (nodeKey === rack[i]) {
+        if (nodeKey === rack[i].toUpperCase()) {
+            var h = rack[i];
             var duplicate = (i > 0 ? (rack[i] === rack[i - 1] ? true : false) : false);
             if (!duplicate) {
                 var newRack = rack.slice(0);
                 newRack.remove(i);
-                this.findWordsRecurse(word, newRack, nodeKey, hookNode, direction, words);
+                this.findWordsRecurse(word, newRack, h, hookNode, direction, words);
             }
         }
     }

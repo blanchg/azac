@@ -1,3 +1,4 @@
+var log = require('./util.js').log;
 function Trie() {
     if (!(this instanceof Trie))
         return new Trie();
@@ -20,12 +21,13 @@ Trie.prototype.addAll = function (words) {
 }
 
 Trie.prototype.add = function (word) {
+    // log('word ' + word);
     var letters = word.split(""),
         cur = this.trie;
 
     for (var j = 0; j < letters.length; j++) {
         var letter = letters[j], pos = cur[ letter ];
-
+        // log('letter ' + letter + ' pos ' + JSON.stringify(pos));
         if (pos == null) {
             cur = cur[ letter ] = j === letters.length - 1 ? 0 : {};
 
@@ -35,6 +37,9 @@ Trie.prototype.add = function (word) {
         } else {
             cur = cur[ letter ];
         }
+    }
+    if (pos !== null) {
+        cur[ '$' ] = 0;
     }
 
     return this;

@@ -11,13 +11,21 @@ var Trie = require('../trie.js').Trie;
 describe('Gaddag', function() {
 	var gaddag = null;
 
-	beforeEach(function() {
-		gaddag = new Gaddag();
+	// beforeEach(function() {
+	// 	gaddag = new Gaddag();
 
-		gaddag.add('BAT');
-		gaddag.add('BLA');
-		gaddag.add('BATIN');
-		gaddag.add('BATING');
+	// 	gaddag.add('BAT');
+	// 	gaddag.add('BLA');
+	// 	gaddag.add('BATIN');
+	// 	gaddag.add('BATING');
+	// });
+
+	it('should allow adding words in any order', function() {
+		gaddag = new Gaddag();
+		gaddag.add('ADVA');
+		gaddag.add('ADV');
+		gaddag.findWord('ADV').should.be.ok;
+		gaddag.findWord('ADVA').should.be.ok;
 	});
 
 	it('should allow multiple instances', function() {
@@ -128,6 +136,18 @@ describe('Gaddag', function() {
 				.should
 					.containDeep(['UNEASe', 'UNeASE'])
 					.and.have.lengthOf(2);
+		});
+
+		it.only('should find advance with uppercase but preserve lowercase', function() {
+			gaddag = new Gaddag();
+
+			gaddag.add('ADV');
+			gaddag.add('ADVA');
+
+			gaddag.findWordsWithRackAndHook('aAVD'.split(''), '?????')
+				.should
+					.containDeep(['ADV', 'ADVa', 'aDV', 'aDVA'])
+					.and.have.lengthOf(4);
 		});
 	});
 });

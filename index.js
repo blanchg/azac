@@ -207,7 +207,7 @@ try {
             var index = rack.indexOf('?');
             if (index != -1) {
 
-                // log('   Rack: ' + rack.join(''));
+                log('Rack: ' + rack.join(''));
                 // log("Replace ? in rack: " + rack.join(""));
                 lowerAlphabet.forEach(function(letter) {
                     var filledRack = rack.slice(0);
@@ -218,11 +218,11 @@ try {
                 }, this);
                 return;
             } else {
-                // log('Rack: ' + rack.join(''));
+                // log('   Rack: ' + rack.join(''));
             }
 
             candidates = lexicon.findWordsWithRackAndHook(rack.slice(0), hook);
-            // log("Rack: " + rack.join("") + " In Bag: " + bag.length + " Candidates: " + candidates.length);
+            log("Rack: " + rack.join("") + " In Bag: " + bag.length + " Candidates: " + candidates.length);
             if (!candidates || candidates.length == 0)
                 return;
 
@@ -231,11 +231,12 @@ try {
                     var itemCol = col;
                     var itemRow = row;
 
+                    log('Have word: ' + item);
                     if (!grid.fits(itemCol,itemRow,horizontal,item))
                         return;
 
                     var leftOver = rackLength(rack.slice(0), item, hook.split(''), replacements.slice(0));
-                    // log("Left over: " + leftOver);
+                    log("Left over: " + leftOver);
                     var itemScore = grid.validateMove(item, itemCol, itemRow, horizontal, firstWord, leftOver);
                     if (itemScore > 0)
                         log("(" + itemCol + ", " + itemRow + ") " + (horizontal?'h ':'v ') + item + " - " + hook + ' = ' + itemScore);
