@@ -136,8 +136,17 @@ Grid.prototype.print = function (target) {
 		trim = false;
 	}
     var i = 0;
+
+    var header = '   '
+    for (var i = 0; i < this.size; i++) {
+        header += ALPHABET[i];
+    }
+    target(header);
     for (var x = 0; x < this.size; x++) {
-    	var line = '|' + this.slice(x * this.size,x*this.size + this.size).join('') + '|';
+        var num = x + 1;
+        if (num < 10)
+            num = ' ' + num;
+    	var line = num + '|' + this.slice(x * this.size,x*this.size + this.size).join('') + '|';
     	if (trim)
     		line = ansiTrim(line);
         target(line);
