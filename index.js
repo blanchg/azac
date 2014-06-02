@@ -62,16 +62,21 @@ var fillRack = function() {
 
 // rack and hook should be arrays
 // word is a string
-function rackLength(rack, word, hook) {
-    var result = reduceRack(rack, word, hook);
-    if (result)
+function rackLength(rack, word, hook, replacements) {
+    var result = reduceRack(rack, word, hook, false, replacements);
+    // log('Result: ' + result);
+    if (result !== null)
         return result.length;
     else 
         return -1;
 }
-function reduceRack(rack, word, hook, debug) {
-    if (debug)
+function reduceRack(rack, word, hook, debug, replacements) {
+    if (debug) {
+        log("input word: " + word)
         log("input hook: " + hook);
+        log("input rack: " + rack);
+        log("input replacements: " + replacements);
+    }
     var failed = word.split('').some(function(letter) {
         if (letter === letter.toLowerCase())
             return false;
@@ -84,6 +89,19 @@ function reduceRack(rack, word, hook, debug) {
         }
         index = rack.indexOf(letter);
         if (index === -1) {
+            index = replacements.indexOf(letter.toLowerCase());
+            if (index !== -1) {
+                replacements.splice(index,1);
+                if (debug)
+                    log('r ' + replacements + " replaced " + letter + ' with ?');
+
+                // letter = '?';
+                index = rack.indexOf(letter.toLowerCase());
+                if (index !== -1) {
+                    rack.splice(index,1);
+                    return false;
+                }
+            }
             if (debug)
                 log("Rack " + rack + " doesn't have " + letter + " from word " + word + " hook " + hook)
             return true;
@@ -96,6 +114,7 @@ function reduceRack(rack, word, hook, debug) {
     {
         return null;
     } else {
+        // log("Returning rack: '" + rack.join('') + "'");
         return rack;
     }
 }
@@ -187,15 +206,19 @@ try {
             // log("process hook " + hook);
             var index = rack.indexOf('?');
             if (index != -1) {
-                log("Replace ? in rack: " + rack.join(""));
+
+                // log('   Rack: ' + rack.join(''));
+                // log("Replace ? in rack: " + rack.join(""));
                 lowerAlphabet.forEach(function(letter) {
                     var filledRack = rack.slice(0);
                     filledRack[index] = letter;
                     var r = replacements.slice(0);
                     r.push(letter);
                     processRack(filledRack, r, hook, firstWord, horizontal);
-                });
+                }, this);
                 return;
+            } else {
+                // log('Rack: ' + rack.join(''));
             }
 
             candidates = lexicon.findWordsWithRackAndHook(rack.slice(0), hook);
@@ -211,7 +234,8 @@ try {
                     if (!grid.fits(itemCol,itemRow,horizontal,item))
                         return;
 
-                    var leftOver = rackLength(rack.slice(0), item, hook.split(''));
+                    var leftOver = rackLength(rack.slice(0), item, hook.split(''), replacements.slice(0));
+                    // log("Left over: " + leftOver);
                     var itemScore = grid.validateMove(item, itemCol, itemRow, horizontal, firstWord, leftOver);
                     if (itemScore > 0)
                         log("(" + itemCol + ", " + itemRow + ") " + (horizontal?'h ':'v ') + item + " - " + hook + ' = ' + itemScore);
@@ -237,7 +261,7 @@ try {
         }
         // log("Scoring word: " + word + ' replacements: ' + wordReplacements + ' hook: ' + wordHook);
         var wordRack = rack.slice(0).join('');
-        rack = reduceRack(rack.slice(0), word, wordHook.split(''), true);
+        rack = reduceRack(rack.slice(0), word, wordHook.split(''), true, wordReplacements);
         var position = ROWS[wordRow] + COLUMNS[wordCol];
         if (!wordHorizontal) {
             position = COLUMNS[wordCol] + ROWS[wordRow];

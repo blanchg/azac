@@ -14,10 +14,10 @@ describe('Gaddag', function() {
 	beforeEach(function() {
 		gaddag = new Gaddag();
 
-		gaddag.add('bat');
-		gaddag.add('bla');
-		gaddag.add('batin');
-		gaddag.add('bating');
+		gaddag.add('BAT');
+		gaddag.add('BLA');
+		gaddag.add('BATIN');
+		gaddag.add('BATING');
 	});
 
 	it('should allow multiple instances', function() {
@@ -26,88 +26,87 @@ describe('Gaddag', function() {
 		// log('gaddag ' + gaddag.getTrie());
 		// log('gd2    ' + gd2.getTrie());
 		gaddag.getTrie().should.not.be.exactly(gd2.getTrie());
-		gd2.findWord('bat').should.be.false;
-		gaddag.findWord('bat').should.be.true;
+		gd2.findWord('BAT').should.be.false;
+		gaddag.findWord('BAT').should.be.true;
 	});
 
 	it('find word', function() {
-		gaddag.findWord('bating').should.be.ok;
-		gaddag.findWord('batin').should.be.ok;
-		gaddag.findWord('bati').should.not.be.ok;
-		gaddag.findWord('bat').should.be.ok;
-		gaddag.findWord('blah').should.not.be.ok;
-		gaddag.findWord('b').should.not.be.ok;
-		gaddag.findWord('bla').should.be.ok;
+		gaddag.findWord('BATING').should.be.ok;
+		gaddag.findWord('BATIN').should.be.ok;
+		gaddag.findWord('BATI').should.not.be.ok;
+		gaddag.findWord('BAT').should.be.ok;
+		gaddag.findWord('BLAH').should.not.be.ok;
+		gaddag.findWord('B').should.not.be.ok;
+		gaddag.findWord('BLA').should.be.ok;
 	});
 
 	it('find hook sequence', function() {
-		gaddag.findWordsWithRackAndHook('bagt'.split(''), 'tin')
-			.should.containDeep(['batin', 'bating'])
+		gaddag.findWordsWithRackAndHook('BAGT'.split(''), 'TIN')
+			.should.containDeep(['BATIN', 'BATING'])
 			.and.have.lengthOf(2);
-// log('Find part of word: ' + gaddag.findWordsWithRackAndHook('bagt'.split(''), 'tin').join(', '));
 	});
 
 	describe('find hook pattern', function() {
 		it('should find word missing first character', function() {
-			gaddag.findWordsWithRackAndHook(['b'], '?at')
-				.should.containDeep(['bat'])
+			gaddag.findWordsWithRackAndHook(['B'], '?AT')
+				.should.containDeep(['BAT'])
 				.and.have.lengthOf(1);
 		});
 		it ('should not find missing word with missing first character', function() {
-			gaddag.findWordsWithRackAndHook(['b'], '?a')
-				.should.not.containDeep(['ba'])
+			gaddag.findWordsWithRackAndHook(['B'], '?A')
+				.should.not.containDeep(['BA'])
 				.and.have.lengthOf(0);
 		});
 		it ('should find word missing last character', function() {
-			gaddag.findWordsWithRackAndHook(['t'], 'ba?')
-				.should.containDeep(['bat'])
+			gaddag.findWordsWithRackAndHook(['T'], 'BA?')
+				.should.containDeep(['BAT'])
 				.and.have.lengthOf(1);
 		});
 		it ('should find word with middle character', function() {
-			gaddag.findWordsWithRackAndHook(['b','t'], '?a?')
-				.should.containDeep(['bat'])
+			gaddag.findWordsWithRackAndHook(['B','T'], '?A?')
+				.should.containDeep(['BAT'])
 				.and.have.lengthOf(1);
 		});
 		it ('should not find word with not enough characters', function() {
-			gaddag.findWordsWithRackAndHook('bat'.split(''), '??')
-				.should.not.containDeep(['bat'])
+			gaddag.findWordsWithRackAndHook('BAT'.split(''), '??')
+				.should.not.containDeep(['BAT'])
 				.and.have.lengthOf(0);
 		});
 		it ('should find word missing middle character', function() {
-			gaddag.findWordsWithRackAndHook(['a'], 'b?t')
-				.should.containDeep(['bat'])
+			gaddag.findWordsWithRackAndHook(['A'], 'B?T')
+				.should.containDeep(['BAT'])
 				.and.have.lengthOf(1);
 		});
 		it ('should find word missing all character', function() {
-			gaddag.findWordsWithRackAndHook('batin'.split(''), '?????')
-				.should.containDeep(['bat', 'batin'])
+			gaddag.findWordsWithRackAndHook('BATIN'.split(''), '?????')
+				.should.containDeep(['BAT', 'BATIN'])
 				.and.have.lengthOf(2);
 		});
 		it ('should find word with no trie children', function() {
-			gaddag.findWordsWithRackAndHook('bla'.split(''), '???')
-				.should.containDeep(['bla'])
+			gaddag.findWordsWithRackAndHook('BLA'.split(''), '???')
+				.should.containDeep(['BLA'])
 				.and.have.lengthOf(1);
 		});
 		it ('should find word missing some character and no trie children', function() {
-			gaddag.findWordsWithRackAndHook('atng'.split(''), 'b??i??')
-				.should.containDeep(['batin', 'bating'])
+			gaddag.findWordsWithRackAndHook('ATNG'.split(''), 'B??I??')
+				.should.containDeep(['BATIN', 'BATING'])
 				.and.have.lengthOf(2);
 		});
 		it('should find word with blank character at the start', function() {
-			gaddag.findWordsWithRackAndHook('bl'.split(''), '?????a').should
-				// .containDeep(['bla'])
+			gaddag.findWordsWithRackAndHook('BL'.split(''), '?????A').should
+				// .containDeep(['BLA'])
 				.and.have.lengthOf(0);
 		});
 		// it.skip ('should find word must cross hook', function() {
-		// 	gaddag.findWordsWithRackAndHook('bat'.split(''), '????r????')
+		// 	gaddag.findWordsWithRackAndHook('BAT'.split(''), '????r????')
 		// 		.should
-		// 			// .containDeep(['bla'])
+		// 			// .containDeep(['BLA'])
 		// 			.and.have.lengthOf(0);
 		// });
 		it('should not find word in hook only', function() {
-			gaddag.findWordsWithRackAndHook('r'.split(''), 'bat???')
+			gaddag.findWordsWithRackAndHook('R'.split(''), 'BAT???')
 				.should
-					// .containDeep(['bla'])
+					// .containDeep(['BLA'])
 					.and.have.lengthOf(0);
 		});
 
@@ -117,8 +116,18 @@ describe('Gaddag', function() {
 			gaddag.add('UNEASE');
 			gaddag.findWordsWithRackAndHook('UNEAS'.split(''), '??????E')
 				.should
-					// .containDeep(['bla'])
+					// .containDeep(['BLA'])
 					.and.have.lengthOf(0);
+		});
+
+		it('should find with uppercase but preserve lowercase', function() {
+			gaddag = new Gaddag();
+
+			gaddag.add('UNEASE');
+			gaddag.findWordsWithRackAndHook('UNEASe'.split(''), '??????')
+				.should
+					.containDeep(['UNEASe', 'UNeASE'])
+					.and.have.lengthOf(2);
 		});
 	});
 });

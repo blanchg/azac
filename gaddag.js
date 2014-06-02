@@ -139,6 +139,7 @@ Gaddag.prototype.findWordsWithRackAndHook = function (rack, hook) {
      processed a letter before descending the subtree.
      */
     rack.sort();
+    // rack = rack.map(function(letter) { return letter.toUpperCase()});
 
     if (hook === '') {
         /*
@@ -202,7 +203,7 @@ Gaddag.prototype.searchGaps = function(hook, searchRack, trie, words, rackUsed) 
 
 Gaddag.prototype.findWordsWithPart = function(hook, trie, rack, words, rackUsed) {
     // log('trie ' + JSON.stringify(trie));
-    var searchTrie = this.findSuffix(hook, trie);
+    var searchTrie = this.findSuffix(hook.toUpperCase(), trie);
     // log('searchtrie ' + JSON.stringify(trie));
     if (searchTrie) {
         var direction = 'reverse';
