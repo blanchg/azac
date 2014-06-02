@@ -131,7 +131,7 @@ Grid.prototype.cell = function(col, row) {
 
 Grid.prototype.print = function (target) {
 	var trim = true;
-	if (!target) {
+	if (!target || target === log) {
 		target = log;
 		trim = false;
 	}
