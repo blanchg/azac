@@ -219,5 +219,35 @@ describe("Grid", function() {
 			// grid.print();
 		});
 
+		it("should only play letters that are avaliable", function() {
+// H3 OPIATE 22,
+// I3 DID 19,
+// 4H PIEING 18,
+// 7F RETORTED 63,
+// 8K ARECA 32,
+// 9K ERE 15,
+// G1 FOH 24,
+// 1G FIZ 45,
+// 8A UNEASE 23
+			grid.lexicon = new Gaddag();
+			grid.lexicon.addAll(['OPIATE', 'DID','PIEING','ARECA','RETORTED','TA','ER','DE','ERE','OHIA','OE','HI','IN','AG','FOH','FIZ','UNEASE']);
+			grid.addWord('OPIATE', 7, 2, false);
+			grid.addWord('DID', 8, 2, false);
+			grid.addWord('PIEING', 7, 3, true);
+			grid.addWord('RETORTED', 5, 6, true);
+			grid.addWord('ARECA', 10, 7, true);
+			grid.addWord('ERE', 10, 8, true);
+			grid.addWord('FOH', 6, 0, false);
+			grid.addWord('FIZ', 6, 0, true);
+			var word = 'UNEASE';
+			var col = 0;
+			var row = 7;
+			var horizontal = true;
+			// grid.validateMove(word, col, row, horizontal).should.be.exactly(-1);
+			grid.addWord(word, col, row, horizontal);
+			grid.print();
+
+		})
+
 	});
 });

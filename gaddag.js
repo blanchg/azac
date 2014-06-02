@@ -154,10 +154,10 @@ Gaddag.prototype.findWordsWithRackAndHook = function (rack, hook) {
         // }
         if (hook.indexOf('?') != -1) {
             this.searchGaps(hook, rack.slice(0), trie, words, false);
-            while (hook[0] == '?') {
-                hook = hook.substr(1);
-                this.searchGaps(hook, rack.slice(0), trie, words, false);
-            }
+            // while (hook[0] == '?') {
+            //     hook = hook.substr(1);
+            //     this.searchGaps(hook, rack.slice(0), trie, words, false);
+            // }
         } else {
             this.findWordsWithPart(hook, trie, rack, words, false);
         }

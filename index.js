@@ -164,7 +164,8 @@ try {
                             hookLetters.push(rawCell);
                         }
                     };
-                    processRack(rack.slice(0), [], hookLetters.join(''), firstWord, false);
+                    if (grid.beforeEmpty(col, row, false))
+                        processRack(rack.slice(0), [], hookLetters.join(''), firstWord, false);
                     hookRow = row;
                     hookLetters = [];
                     for (hookCol = col; hookCol < grid.size; hookCol++) {
@@ -176,7 +177,8 @@ try {
                             hookLetters.push(rawCell);
                         }
                     };
-                    processRack(rack.slice(0), [], hookLetters.join(''), firstWord, true);
+                    if (grid.beforeEmpty(col, row, true))
+                        processRack(rack.slice(0), [], hookLetters.join(''), firstWord, true);
                 }
             };
         }
