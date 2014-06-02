@@ -60,111 +60,6 @@ var fillRack = function() {
     }
 }
 
-var removeFromRack = function(r, word, replacements) {
-    // log('w ' + word);
-    var letters = word.split('');
-    replacements.forEach(function (letter) {
-        letters.push('?');
-    })
-    letters.forEach(function (letter) {
-        // log("looking for " + letter + " in " + r.join(","));
-        var index = r.indexOf(letter);
-        if (index == -1) {
-            log("Error in rack")
-            throw "Invalid move error: " + letter + " not in " + r.join(",") + " index: " + index;
-        }
-        r.remove(index);
-    });
-    return r;
-}
-
-var removeHookFromWord = function(hook, word, error) {
-    if (hook == '')
-        return word;
-    if (error === undefined)
-        error = true;
-    var result = hook.split('').some(function(hookLetter) {
-        if (hookLetter == '?') return false;
-        var index = word.indexOf(hookLetter);
-        if (index == -1 && error) {
-            log("Error in word " + word)
-            throw "Invalid move error: " + hookLetter + " not in " + word + " index: " + index;
-            return true;
-        }
-        word = word.substring(0, index) + word.substring(index + 1);
-        return false;
-    });
-    return word;
-}
-
-function wordMultiplier(cell) {
-	switch(cell) {
-		case clc.bold('T'):
-			return 3;
-		case clc.bold('D'):
-			return 2;
-		default:
-			return 1;
-	} 
-}
-function letterMultiplier(cell) {
-	switch(cell) {
-		case clc.bold('t'):
-			return 3;
-		case clc.bold('d'):
-			return 2;
-		default:
-			return 1;
-	} 
-}
-
-function scoreLettersRaw(letters) {
-
-    if (!letters || letters.length == 0)
-        return 0;
-    var totalScore = 0;
-    letters.forEach(function(letter, i) {
-    	var score = scores[alphabet.indexOf(letter)];
-    	if (isNaN(score))
-    		return;
-        totalScore += score;
-    });
-    return totalScore;	
-}
-function scoreLetters(letters, col, row, horizontal) {
-
-    if (!letters || letters.length == 0)
-        return 0;
-    var totalScore = 0;
-    var multiplier = 1;
-    letters.forEach(function(letter, i) {
-    	var score = scores[alphabet.indexOf(letter)];
-        var cellCol = horizontal?col:col+i;
-        var cellRow = !horizontal?row:row+i;
-		var cell = grid.rawCell(cellCol, cellRow);
-		if (cell === null)
-			return -1;
-        // log('letter ' + letter + ' ' + score + ' * ' + letterMultiplier(cell) + ' ' + cell);
-		score *= letterMultiplier(cell);
-		multiplier = multiplier * wordMultiplier(cell);
-        totalScore += score;
-    });
-    // log('word ' + letters.join('') + ' ' + totalScore + ' * ' + multiplier);
-    totalScore *= multiplier;
-    return totalScore;
-}
-function score(word, rack, col, row, horizontal) {
-    var score = 0;
-    if (rack.length == 0) {
-        score += 50;
-    }
-    var letterScore = scoreLetters(word.split(''), col, row, horizontal);
-    if (letterScore < 0)
-    	return -1;
-    score += letterScore;
-    return score;
-}
-
 // rack and hook should be arrays
 // word is a string
 function rackLength(rack, word, hook) {
@@ -221,21 +116,10 @@ function processAll() {
 try {
     log('ready to process');
 
-    // console.time('search2');
-    // var rack = 'abatisr'.split('');
-    // log("All words that can be formed using " + rack.join(', ') + ": ");
-    // log(gaddag.findWordsWithRackAndHook(rack, ''));
-    // console.timeEnd('search2');
     var totalScore = 0;
     var foundWords = [];
     var firstWord = true;
-    // grid.wordH(2, 2, 'hello');
-    // grid.wordV(2, 2, 'hello');
-    // grid.print();
 
-    // log("prefix: " + gaddag.findWordsWithRackAndHook('train'.split(''), 'ing').join(','));
-
-    // log("0,0: " + (board.cell(0,0) == 'T'));
     grid.print();
     grid.lexicon = lexicon;
     var col = 3;
@@ -321,22 +205,9 @@ try {
                 function (item) {
                     var itemCol = col;
                     var itemRow = row;
-                    // if (hook.length > 0) {
-                    //     if (horizontal) { // This is horizontal so previous was vertical so work off row
-                    //         itemCol -= item.indexOf(hook);
-                    //         itemRow = row + hookIndex;
-                    //     } else {
-                    //         itemCol = col + hookIndex;
-                    //         itemRow -= item.indexOf(hook);
-                    //     }
-                    // }
 
                     if (!grid.fits(itemCol,itemRow,horizontal,item))
                         return;
-
-                    // var tempItem = '' + item;
-                    // replacements.forEach(function (letter) { tempItem = removeHookFromWord(letter, tempItem, false) });
-                    // var itemScore = scoreLetters(tempItem.split(''), itemCol, itemRow, horizontal);
 
                     var leftOver = rackLength(rack.slice(0), item, hook.split(''));
                     var itemScore = grid.validateMove(item, itemCol, itemRow, horizontal, firstWord, leftOver);
@@ -363,13 +234,7 @@ try {
             break;
         }
         // log("Scoring word: " + word + ' replacements: ' + wordReplacements + ' hook: ' + wordHook);
-        // var foundWord = word;
-        // wordReplacements.forEach(function (letter) { word = removeHookFromWord(letter, word, false) });
-        // var scoreWord = word;
-        // word = removeHookFromWord(wordHook, word);
         var wordRack = rack.slice(0).join('');
-        // removeFromRack(rack, word, wordReplacements);
-        // wordScore = score(scoreWord, rack, wordCol, wordRow, wordHorizontal);
         rack = reduceRack(rack.slice(0), word, wordHook.split(''), true);
         var position = ROWS[wordRow] + COLUMNS[wordCol];
         if (!wordHorizontal) {
@@ -388,15 +253,9 @@ try {
         grid.print();
         saveProgress(grid, foundWords);
 
-        // Setup for next word
-		// horizontal = !wordHorizontal;
-  //       col = wordCol;
-		// row = wordRow;
-
-        // log("Rack: " + rack.join(", "));
     }
-    var bagScore = scoreLettersRaw(bag);
-    var rackScore = scoreLettersRaw(rack);
+    var bagScore = grid.scoreWord(bag);
+    var rackScore = grid.scoreWord(rack);
     log("Total Score: " + totalScore  + " bagScore: -" + bagScore + " rackScore: -" + rackScore + " Final Score: " + (totalScore - bagScore - rackScore));
 
 } finally {

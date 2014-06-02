@@ -67,7 +67,7 @@ describe("Grid", function() {
 		it("should score a valid second hook move", function() {
 			grid.addWord('OPIATE', 7, 2, false);
 			grid.validateMove('DIRT', 6, 4, true, false).should.be.exactly(5);
-			// grid.addWord('dirt', 6, 4, true);
+			// grid.addWord('DIRT', 6, 4, true);
 			// grid.print();
 
 		});
@@ -169,9 +169,55 @@ describe("Grid", function() {
 			var horizontal = false;
 			grid.validateMove(word, col, row, horizontal).should.be.exactly(-1);
 			grid.addWord(word, col, row, horizontal);
-			grid.print();
+			// grid.print();
 		});
 
+		it("should score 32 for the last word here", function () {
+// H3 OPIATE 22,
+// I3 DID 19,
+// 4H PIEING 18,
+// 7F RETORTED 63,
+// 8K ARECA 32,
+
+			grid.lexicon = new Gaddag();
+			grid.lexicon.addAll(['OPIATE', 'DID','PIEING','ARECA','RETORTED','TA','ER','DE']);
+			grid.addWord('OPIATE', 7, 2, false);
+			grid.addWord('DID', 8, 2, false);
+			grid.addWord('PIEING', 7, 3, true);
+			grid.addWord('RETORTED', 5, 6, true);
+			var word = 'ARECA';
+			var col = 10;
+			var row = 7;
+			var horizontal = true;
+			grid.validateMove(word, col, row, horizontal).should.be.exactly(32);
+			grid.addWord(word, col, row, horizontal);
+			// grid.print();
+		});
+
+		it("should not score words that have board letters before them", function() {
+// H3 OPIATE 22,
+// I3 DID 19,
+// 4H PIEING 18,
+// 7F RETORTED 63,
+// 8K ARECA 32,
+// 9K ERE 15,
+// 3J OHIA 29
+			grid.lexicon = new Gaddag();
+			grid.lexicon.addAll(['OPIATE', 'DID','PIEING','ARECA','RETORTED','TA','ER','DE','ERE','OHIA','OE','HI','IN','AG']);
+			grid.addWord('OPIATE', 7, 2, false);
+			grid.addWord('DID', 8, 2, false);
+			grid.addWord('PIEING', 7, 3, true);
+			grid.addWord('RETORTED', 5, 6, true);
+			grid.addWord('ARECA', 10, 7, true);
+			grid.addWord('ERE', 10, 8, true);
+			var word = 'OHIA';
+			var col = 9;
+			var row = 2;
+			var horizontal = true;
+			grid.validateMove(word, col, row, horizontal).should.be.exactly(-1);
+			grid.addWord(word, col, row, horizontal);
+			// grid.print();
+		});
 
 	});
 });

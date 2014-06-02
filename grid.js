@@ -130,10 +130,10 @@ Grid.prototype.cell = function(col, row) {
 }
 
 Grid.prototype.print = function (target) {
-	var trim = false;
+	var trim = true;
 	if (!target) {
 		target = log;
-		trim = true;
+		trim = false;
 	}
     var i = 0;
     for (var x = 0; x < this.size; x++) {
@@ -232,6 +232,30 @@ Grid.prototype.suffix = function(col, row, horizontal) {
 	return word;
 }
 
+Grid.prototype.beforeEmpty = function(col, row, horizontal) {
+    var itemRow = row;
+    var itemCol = col;
+    if (horizontal) {
+        itemCol--;
+        return itemCol < 0 || this.cellEmpty(itemCol, itemRow);
+    } else {
+        itemRow--;
+        return itemRow < 0 || this.cellEmpty(itemCol, itemRow);
+    }
+}
+
+Grid.prototype.afterEmpty = function(word, col, row, horizontal) {
+    var itemRow = row;
+    var itemCol = col;
+    if (horizontal) {
+        itemCol += word.length;
+        return itemCol >= this.size || this.cellEmpty(itemCol, itemRow);
+    } else {
+        itemRow += word.length;
+        return itemRow >= this.size || this.cellEmpty(itemCol, itemRow);
+    }
+}
+
 /**
  * Takes a word as a string, a column and a row and if it is a horizontal word
 
@@ -247,12 +271,21 @@ Grid.prototype.validateMove = function(word, col, row, horizontal, firstWord, ra
     if (!this.fits(col, row, horizontal, word))
         return -1;
     var totalScore = 0;
+    var totalAltScore = 0;
     var totalWordMultiplier = 1;
     var foundAltWord = false;
     var foundHook = false;
     var foundMiddle = false;
     var middleColRow = Math.floor(this.size / 2);
     var letterPlaced = false;
+
+    if (!this.beforeEmpty(col, row, horizontal)) {
+        return -1;
+    }
+    if (!this.afterEmpty(word, col, row, horizontal)) {
+        return -1;
+    }
+
     var failed = word.split('').some(function(letter, i) {
         var cellCol = horizontal?col+i:col;
         var cellRow = !horizontal?row+i:row;
@@ -298,17 +331,21 @@ Grid.prototype.validateMove = function(word, col, row, horizontal, firstWord, ra
 	        }
 		}
 
-        // log(rawCell + ' ' + letter + ' ' + letterScore + ' * ' + letterMultiplier + ' + ' + altScore + ' = ' + (letterScore * letterMultiplier + altScore));
-        totalScore += letterScore * letterMultiplier + altScore;
+        // log(rawCell + ' ' + letter + ' ' + letterScore + ' * ' + letterMultiplier + ' = ' + (letterScore * letterMultiplier + altScore) + ' (' + altScore + ')');
+        totalScore += letterScore * letterMultiplier;
+        totalAltScore += altScore;
         totalWordMultiplier = totalWordMultiplier * wordMultiplier;
 
         return false;
     }, this);
 
-    if (failed)
+    if (failed) {
+        // log('failed');
         return -1;
+    }
 
     if (!letterPlaced) {
+        // log('!letterPlaced');
     	return -1;
     }
 
@@ -325,7 +362,8 @@ Grid.prototype.validateMove = function(word, col, row, horizontal, firstWord, ra
         }
     }
 
-    totalScore = totalScore * totalWordMultiplier;
+    // log("Total: " + totalScore + " * " + totalWordMultiplier + " + " + totalAltScore + " = " + (totalScore * totalWordMultiplier + totalAltScore));
+    totalScore = totalScore * totalWordMultiplier + totalAltScore;
 
     if (rackLength === 0)
     {
