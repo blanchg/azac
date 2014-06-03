@@ -4,6 +4,7 @@ var log = require('./util.js').log;
 var fs = require('fs');
 var clc = require('cli-color');
 var ansiTrim = require('cli-color/trim');
+var Combinatorics = require('js-combinatorics').Combinatorics;
 
 var Solver = function() {
     this.rack = [];
@@ -107,6 +108,10 @@ Solver.prototype.reduceRack = function(rack, word, hook, debug, replacements) {
     }
 }
 
+Solver.prototype.permutations = function(string) {
+  return Combinatorics.permutationAll(string.split(''));
+};
+
 Solver.prototype.processRack = function(col, row, rack, replacements, hook, firstWord, horizontal, result) {
     // log("process hook " + hook);
     var index = rack.indexOf('?');
@@ -125,6 +130,8 @@ Solver.prototype.processRack = function(col, row, rack, replacements, hook, firs
     } else {
         // log('   Rack: ' + rack.join(''));
     }
+
+
 
     var candidates = this.lexicon.findWordsWithRackAndHook(rack.slice(0), hook);
     // log("Rack: " + rack.join("") + " In Bag: " + bag.length + " Candidates: " + candidates.length);

@@ -12,6 +12,21 @@ describe('Solver', function() {
 		solver = new Solver();
 	});
 
+	describe('permutations', function() {
+		it('Should return all permutations of ab', function () {
+			var ab = solver.permutations('ab');
+			// ab.next().should.eql([]);
+			ab.next().should.eql(['a']);
+			ab.next().should.eql(['b']);
+			ab.next().should.eql(['a','b']);
+			ab.next().should.eql(['b','a']);
+			(ab.next() === undefined).should.be.true;
+			// while((result = ab.next()) !== undefined) {
+			// 	log(result);
+			// }
+		});
+	});
+
 	describe('reduceRack', function() {
 
 		it('should allow reducing the rack', function() {
