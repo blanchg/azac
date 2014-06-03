@@ -11,14 +11,14 @@ var Trie = require('../trie.js').Trie;
 describe('Gaddag', function() {
 	var gaddag = null;
 
-	// beforeEach(function() {
-	// 	gaddag = new Gaddag();
+	beforeEach(function() {
+		gaddag = new Gaddag();
 
-	// 	gaddag.add('BAT');
-	// 	gaddag.add('BLA');
-	// 	gaddag.add('BATIN');
-	// 	gaddag.add('BATING');
-	// });
+		gaddag.add('BAT');
+		gaddag.add('BLA');
+		gaddag.add('BATIN');
+		gaddag.add('BATING');
+	});
 
 	it('should allow adding words in any order', function() {
 		gaddag = new Gaddag();

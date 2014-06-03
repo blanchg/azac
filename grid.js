@@ -204,14 +204,14 @@ Grid.prototype.prefix = function(col, row, horizontal) {
 	if (!this.cellEmpty(col, row))
 		return word;
 	if (horizontal) {
-		for (var itemCol = col-1; itemCol > 0; itemCol--) {
+		for (var itemCol = col-1; itemCol >= 0; itemCol--) {
 			if (this.cellEmpty(itemCol, row)) {
 				break;
 			}
 			word = this.cell(itemCol, row) + word;
 		};
 	} else {
-		for (var itemRow = row-1; itemRow > 0; itemRow--) {
+		for (var itemRow = row-1; itemRow >= 0; itemRow--) {
 			if (this.cellEmpty(col, itemRow))
 				break;
 			word = this.cell(col, itemRow) + word;
@@ -246,9 +246,11 @@ Grid.prototype.beforeEmpty = function(col, row, horizontal) {
     var itemCol = col;
     if (horizontal) {
         itemCol--;
+        // log('Empty test: ' + itemCol + ',' + itemRow + ' ' + horizontal);
         return itemCol < 0 || this.cellEmpty(itemCol, itemRow);
     } else {
         itemRow--;
+        // log('Empty test: ' + itemCol + ',' + itemRow + ' ' + horizontal);
         return itemRow < 0 || this.cellEmpty(itemCol, itemRow);
     }
 }
@@ -276,7 +278,7 @@ Place letters one-by-one onto the board
 Validate the “main” word and calculate the score appropriately.
 
  **/
-Grid.prototype.validateMove = function(word, col, row, horizontal, firstWord, rackLength) {
+Grid.prototype.validateMove = function(word, col, row, horizontal, firstWord, rackUsed) {
     if (!this.fits(col, row, horizontal, word))
         return -1;
     var totalScore = 0;
@@ -374,7 +376,7 @@ Grid.prototype.validateMove = function(word, col, row, horizontal, firstWord, ra
     // log("Total: " + totalScore + " * " + totalWordMultiplier + " + " + totalAltScore + " = " + (totalScore * totalWordMultiplier + totalAltScore));
     totalScore = totalScore * totalWordMultiplier + totalAltScore;
 
-    if (rackLength === 0)
+    if (rackUsed === 7)
     {
         totalScore += 50;
     }

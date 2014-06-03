@@ -60,6 +60,10 @@ describe("Grid", function() {
 			grid.validateMove('OPIATE', 7, 2, false, true).should.be.exactly(22);
 		});
 
+		it("should score a bonus first move", function() {
+			grid.validateMove('OPIATE', 7, 2, false, true, 7).should.be.exactly(72);
+		});
+
 		it("should not score an invalid first move", function() {
 			grid.validateMove('OPIATE', 6, 2, false, true).should.be.exactly(-1);
 		});
@@ -247,7 +251,67 @@ describe("Grid", function() {
 			grid.addWord(word, col, row, horizontal);
 			grid.print();
 
-		})
+		});
 
+		it("should not play words not in lex", function() {
+//    012345678901234
+//    ABCDEFGHIJKLMNO
+//0  1|T··d···T··MERIT|
+//1  2|·D···tGANJA·AY·|
+//2  3|··D···dDUOTONE·|
+//3  4|d··D·S·V·GEM··d|
+//4  5|····PI·a··R····|
+//5  6|OUTFOX·N·HI·Vt·|
+//6  7|··dID·dCdAE·O·e|
+//7  8|T··NE··E··LAW·Q|
+//8  9|··COSIEST··BE·U|
+//9 10|·t··Tt···t·ELtA|
+//0 11|···HARL···DL··T|
+//1 12|d·KA···d·R·I··E|
+//2 13|··ER··d·WIZARDS|
+//3 14|·INDIGO·EF·N·D·|
+//4 15|T·OY··PUB··d··T|
+// E:
+// H2 ADVaNCE 82,
+// 2G GANJA 29,
+// 9C COSIEST 77,
+// K1 MATERIEL 70,
+// E5 PODESTA 40,
+// L8 ABELIAN 73,
+// F4 SIX 55,
+// 13I WIZARD 46,
+// 3H DUOTONE 30,
+// 14I EF 31,
+// 15G PUB 29,
+// 4J GEM 31,
+// 1K MERIT 24,
+// M6 VOWEL 26,
+// 2M AY 22,		
+
+			grid.lexicon = new Gaddag();
+			grid.lexicon.addAll(['ADVANCE', 'GANJA','COSIEST','MATERIEL','PODESTA','ABELIAN','SIX','WIZARD','DUOTONE','EF','PUB','GEM','MERIT','VOWEL','AY','RAN']);
+			grid.addWord('ADVaNCE', 7, 2, false);
+			grid.addWord('GANJA', 6, 1, true);
+			grid.addWord('COSIEST', 2, 8, true);
+			grid.addWord('MATERIEL', 10, 0, false);
+			grid.addWord('PODESTA', 4, 4, false);
+			grid.addWord('ABELIAN', 11, 7, false);
+			grid.addWord('SIX', 5, 3, false);
+			grid.addWord('WIZARD', 8, 12, true);
+			grid.addWord('DUOTONE', 7, 2, true);
+			grid.addWord('EF', 8, 13, true);
+			grid.addWord('PUB', 6, 14, true);
+			grid.addWord('GEM', 9, 3, true);
+			grid.addWord('MERIT', 10, 0, true);
+			grid.addWord('VOWEL', 2, 5, false);
+			var word = 'AY';
+			var col = 12;
+			var row = 1;
+			var horizontal = true;
+			grid.validateMove(word, col, row, horizontal).should.be.exactly(-1);
+			grid.addWord(word, col, row, horizontal);
+			grid.print();
+
+		});
 	});
 });
