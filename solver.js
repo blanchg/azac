@@ -109,7 +109,7 @@ Solver.prototype.reduceRack = function(rack, word, hook, debug, replacements) {
 }
 
 Solver.prototype.permutations = function(string) {
-  return Combinatorics.permutationAll(string.split(''));
+  return Combinatorics.permutationCombination(string.split(''));
 };
 
 Solver.prototype.processRack = function(col, row, rack, replacements, hook, firstWord, horizontal, result) {

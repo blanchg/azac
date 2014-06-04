@@ -25,6 +25,18 @@ describe('Solver', function() {
 			// 	log(result);
 			// }
 		});
+		it('Should return all permutations of abcd', function () {
+			var ab = solver.permutations('abcd');
+			// ab.next().should.eql([]);
+			// ab.next().should.eql(['a']);
+			// ab.next().should.eql(['b']);
+			// ab.next().should.eql(['a','b']);
+			// ab.next().should.eql(['b','a']);
+			// (ab.next() === undefined).should.be.true;
+			while((result = ab.next()) !== undefined) {
+				log('\t\t[' + result.map(function(x){return '"'+x+'"'}).join(',') + '];');
+			}
+		});
 	});
 
 	describe('reduceRack', function() {
