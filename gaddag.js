@@ -63,7 +63,31 @@ Gaddag.prototype.findWordsWithHook = function (hook) {
     return words;
 }
 
+// Prints all words contained in the Trie
+Gaddag.prototype.getWords = function () {
 
+    // from John Resig's dump-trie.js
+
+    var words = [];
+    this.dig("", this.trie, 'reverse', words);
+    return( words );
+
+    // function dig(word, cur) {
+    //     for (var node in cur) {
+    //         var val = cur[ node ];
+
+    //         if (node === "$") {
+    //             words.push(word);
+
+    //         } else if (val === 0) {
+    //             words.push(word + node);
+
+    //         } else {
+    //             dig(word + node, val);
+    //         }
+    //     }
+    // }
+}
 
 Gaddag.prototype.dig = function(word, cur, direction, words) {
     for (var node in cur) {

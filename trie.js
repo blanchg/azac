@@ -4,7 +4,6 @@ function Trie() {
         return new Trie();
 
     this.trie = {};
-    this.END = {$:0};
 
 }
 
@@ -33,7 +32,7 @@ Trie.prototype.add = function (word) {
             cur = cur[ letter ] = j === letters.length - 1 ? 0 : {};
 
         } else if (pos === 0) {
-            cur = cur[ letter ] = this.END;
+            cur = cur[ letter ] = { $:0 };
 
         } else {
             cur = cur[ letter ];

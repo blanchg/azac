@@ -94,7 +94,8 @@ var escapable = /[\\\"\x00-\x1f\x7f-\x9f\u00ad\u0600-\u0604\u070f\u17b4\u17b5\u2
     },
     rep,
     dy,
-    maxi = 0xF8FF - 0xE000;
+    maxi = 0xF8FF - 0xE000,
+    maxi2 = maxi * maxi;
 
 function esc(a) {
     var c = meta[a];
@@ -161,10 +162,10 @@ function str(key, holder) {
 
         i = dy.indexOf(value);
         if (i !== -1) {
-            return '"' + String.fromCharCode(0xE000 + i) + '"';
+            return '"' + String.fromCharCode(0xE000 + Math.floor(i/maxi)) + String.fromCharCode(0xE000 + Math.floor(i%maxi)) + '"';
         }
 
-        if (dy.length > maxi) {
+        if (dy.length > maxi2) {
             throw new Error('JSONR.stringify: too many references');
         }
 
@@ -276,7 +277,7 @@ exports.isReference = function (value) {
 
 exports.revealReferences = function (text) {
     var begins = /"(?:[^"\\]|\\.)*"|[\[\{]/g,
-        indexes = /\"[\uE000-\uF8FF]\"/g,
+        indexes = /\"[\uE000-\uF8FF][\uE000-\uF8FF]\"/g,
         index = 0;
 
     text = begins.test(text) ? text.replace(begins, function (s) {
@@ -288,20 +289,21 @@ exports.revealReferences = function (text) {
     }) : text;
 
     return indexes.test(text) ? text.replace(indexes, function (i) {
-        return '"@' + (i.charCodeAt(1) - 0xE000) + '"';
+        return '"@' + (((i.charCodeAt(1) - 0xE000) * maxi) + (i.charCodeAt(2) - 0xE000)) + '"';
     }) : text;
 };
 
 function unref(value) {
-    var c, i, k, ks, length;
+    var c, c2, i, k, ks, length;
 
     switch (typeof value) {
     case 'string':
         if (value.length > 0) {
             c = value.charCodeAt(0);
             if (c >= 0xE000 && c <= 0xF8FF) {
-                if (value.length === 1) {
-                    value = dy[c - 0xE000];
+                if (value.length === 2) {
+                    c2 = value.charCodeAt(1);
+                    value = dy[((c - 0xE000) * maxi) + (c2 - 0xE000)];
                 } else if (c === 0xE000) {
                     value = value.substr(1);
                 }

@@ -7,41 +7,93 @@ function LexiconLoader() {
 
     this.callback = null;
     this.lexicon = null;
+    this.dy = {};
 
     this.load = function (callback) {
         this.callback = callback;
-        if (!fs.existsSync('lexicon.js')) {
+        // if (!fs.existsSync('lexicon.js')) {
             log('loading the raw lexicon, this takes about 8 seconds');
             this.loadText(this.save.bind(this));
-        } else {
-            log('loading the lexicon, this takes about 3 seconds');
-            this.loadJson(this.callback);
-            // process();
-        }
+        // } else {
+        //     log('loading the lexicon, this takes about 3 seconds');
+        //     this.loadJson(this.callback);
+        //     // process();
+        // }
     }
 
     this.compress = function() {
+        log('Compressing gaddag');
         var trie = this.lexicon.getTrie();
-        var target = this.getBottom(trie);
+        log("Words: " + this.lexicon.getWords().join(','));
+        // var target = this.getBottom(trie);
+        // log('First ' + JSON.stringify(target));
+        this.dy = {};
+        // if (process.argv > 2)
+            this.trimit('', trie, 'reverse', []);
+        this.dy = {};
+        log("Words: " + this.lexicon.getWords().join(','));
+    }
+
+    this.trimit = function(word, cur, direction, parent) {
+        // log('dy' + JSON.stringify(this.dy));
+        for (var node in cur) {
+            var val = cur[ node ],
+                ch = (node === '>' || node === "$" ? '' : node);
+
+            // log('  ' + word + ' ch:' + ch + ' val:' + val);
+
+            if (val === 0) {
+                // log('word: ' + word + ch);
+                // words.push(word + ch);
+                if (node === ch) {
+                    log(JSON.stringify(cur));
+                    if (this.dy[ch] === undefined) {
+                        log('Defining: ' + ch + ' as ' + JSON.stringify(cur[ch]));
+                        this.dy[ch] = cur[ch];
+                    } else {
+                        cur[ch] = this.dy[ch];
+                    }
+                }
+            } else {
+                // nodes after this form the suffix
+                if (node === '>') direction = 'forward';
+
+                var part = (direction === 'reverse' ? ch + word : word + ch);
+                this.trimit(part, val, direction, cur);
+
+            }
+
+            // done with the previous subtree, reset direction to indicate we are in the prefix part of next subtree
+            if (node === '>') direction = 'reverse';
+        }
     }
 
     this.getBottom = function(trie) {
         var cur = trie;
         for (var node in cur) {
-            return getBottom(cur[ node ]);
+            if (node == '$')
+                continue;
+            var nVal = cur[node];
+            if (nVal == 0)
+                continue
+            return this.getBottom(cur[ node ]);
         }
         return cur;
     }
 
     this.save = function() {
-        // this.compress();
+        this.compress();
         log('Saving the processed lexicon for later');
         console.time('write')
-        fs.writeFileSync('lexicon.js', JSONR.stringify(this.lexicon.getTrie()), {encoding:'utf8'});
+        if (process.argv.length > 2) {
+            fs.writeFileSync('lexicon.js', JSON.stringify(this.lexicon.getTrie(), null, 2), {encoding:'utf8'});
+        } else {
+            fs.writeFileSync('lexiconr.js', JSONR.stringify(this.lexicon.getTrie(), null, 2), {encoding:'utf8'});
+        }
         console.timeEnd('write');
         if (this.callback)
         {
-            this.callback(this.lexicon);
+            // this.callback(this.lexicon);
         }
     }
 
@@ -65,6 +117,8 @@ function LexiconLoader() {
             }).bind(this));
     }
     this.handleData = function(chunk) {
+        if (this.totalWords > 1)
+            return;
         this.data += chunk.toString();
         var split = '\r\n';
         var index = this.data.lastIndexOf('\r\n');
@@ -77,8 +131,12 @@ function LexiconLoader() {
             var words = this.data.substr(0,index).split(split);
             this.totalWords += words.length;
             this.data = this.data.substring(index + 1);
+            var i = 0;
             words.forEach(function(word) {
                 if (word.length > 15) return;
+                i++;
+                if (i > 10)
+                    return;
                 this.lexicon.add(word.toUpperCase())
             }, this);
             log("Added " + this.totalWords + " words");
