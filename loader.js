@@ -1,6 +1,7 @@
 var Gaddag = require('./gaddag.js').Gaddag;
 var fs = require('fs');
 var log = require('./util.js').log;
+var JSONR = require('./jsonr.js');
 
 function LexiconLoader() {
 
@@ -22,7 +23,7 @@ function LexiconLoader() {
     this.save = function save() {
         log('Saving the processed lexicon for later');
         console.time('write')
-        fs.writeFileSync('lexicon.js', JSON.stringify(this.lexicon.getTrie()), {encoding:'utf8'});
+        fs.writeFileSync('lexicon.js', JSONR.stringify(this.lexicon.getTrie()), {encoding:'utf8'});
         console.timeEnd('write');
         if (this.callback)
         {
@@ -79,7 +80,7 @@ function LexiconLoader() {
                 lexiconJS += chunk.toString();
             })
             .on('end', (function () {
-                this.lexicon.setTrie(JSON.parse(lexiconJS));
+                this.lexicon.setTrie(JSONR.parse(lexiconJS));
                 // this.lexicon.setTrie(eval(lexiconJS));
                 console.timeEnd('json');
 

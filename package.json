@@ -6,9 +6,9 @@
   "dependencies": {
     "cli-color": "^0.3.2",
     "csv2": "^0.1.1",
+    "js-combinatorics": "git+http://github.com/blanchg/js-combinatorics.git",
     "through2": "^0.4.1",
-    "underscore": "^1.6.0",
-    "js-combinatorics": "git+https://github.com/blanchg/js-combinatorics.git"
+    "underscore": "^1.6.0"
   },
   "devDependencies": {
     "should": "^3.3.2"
