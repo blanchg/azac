@@ -30,10 +30,15 @@ describe('Gordon', function() {
 			log(g.toDot());
 		});
 
-		it.only('addAll', function() {
-
+		it('addAll', function() {
 			var g = new Gordon();
 			g.addAll('CARE,RACE'.split(','));
+			log(g.toDot());
+		});
+
+		it.only('all', function() {
+			var g = new Gordon();
+			g.addAll('ALL,BALL,CALL'.split(','));
 			log(g.toDot());
 		});
 	});

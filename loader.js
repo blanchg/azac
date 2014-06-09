@@ -1,4 +1,4 @@
-var Gaddag = require('./gaddag.js').Gaddag;
+var Gordon = require('./gordon.js');
 var fs = require('fs');
 var log = require('./util.js').log;
 var JSONR = require('./jsonr.js');
@@ -11,89 +11,26 @@ function LexiconLoader() {
 
     this.load = function (callback) {
         this.callback = callback;
-        // if (!fs.existsSync('lexicon.js')) {
+        if (!fs.existsSync('lexiconr.json')) {
             log('loading the raw lexicon, this takes about 8 seconds');
             this.loadText(this.save.bind(this));
-        // } else {
-        //     log('loading the lexicon, this takes about 3 seconds');
-        //     this.loadJson(this.callback);
-        //     // process();
-        // }
-    }
-
-    this.compress = function() {
-        log('Compressing gaddag');
-        var trie = this.lexicon.getTrie();
-        log("Words: " + this.lexicon.getWords().join(','));
-        // var target = this.getBottom(trie);
-        // log('First ' + JSON.stringify(target));
-        this.dy = {};
-        // if (process.argv > 2)
-            this.trimit('', trie, 'reverse', []);
-        this.dy = {};
-        log("Words: " + this.lexicon.getWords().join(','));
-    }
-
-    this.trimit = function(word, cur, direction, parent) {
-        // log('dy' + JSON.stringify(this.dy));
-        for (var node in cur) {
-            var val = cur[ node ],
-                ch = (node === '>' || node === "$" ? '' : node);
-
-            // log('  ' + word + ' ch:' + ch + ' val:' + val);
-
-            if (val === 0) {
-                // log('word: ' + word + ch);
-                // words.push(word + ch);
-                if (node === ch) {
-                    log(JSON.stringify(cur));
-                    if (this.dy[ch] === undefined) {
-                        log('Defining: ' + ch + ' as ' + JSON.stringify(cur[ch]));
-                        this.dy[ch] = cur[ch];
-                    } else {
-                        cur[ch] = this.dy[ch];
-                    }
-                }
-            } else {
-                // nodes after this form the suffix
-                if (node === '>') direction = 'forward';
-
-                var part = (direction === 'reverse' ? ch + word : word + ch);
-                this.trimit(part, val, direction, cur);
-
-            }
-
-            // done with the previous subtree, reset direction to indicate we are in the prefix part of next subtree
-            if (node === '>') direction = 'reverse';
+        } else {
+            log('loading the lexicon, this takes about 3 seconds');
+            this.loadJson(this.callback);
         }
-    }
-
-    this.getBottom = function(trie) {
-        var cur = trie;
-        for (var node in cur) {
-            if (node == '$')
-                continue;
-            var nVal = cur[node];
-            if (nVal == 0)
-                continue
-            return this.getBottom(cur[ node ]);
-        }
-        return cur;
     }
 
     this.save = function() {
-        this.compress();
         log('Saving the processed lexicon for later');
+        console.time('stringify');
+        var data = JSON.stringify(this.lexicon.getData());
+        console.timeEnd('stringify');
         console.time('write')
-        if (process.argv.length > 2) {
-            fs.writeFileSync('lexicon.js', JSON.stringify(this.lexicon.getTrie(), null, 2), {encoding:'utf8'});
-        } else {
-            fs.writeFileSync('lexiconr.js', JSONR.stringify(this.lexicon.getTrie(), null, 2), {encoding:'utf8'});
-        }
+        fs.writeFileSync('lexiconr.json', data, {encoding:'utf8'});
         console.timeEnd('write');
         if (this.callback)
         {
-            // this.callback(this.lexicon);
+            this.callback(this.lexicon);
         }
     }
 
@@ -101,7 +38,7 @@ function LexiconLoader() {
         this.data = "";
         this.totalWords = 0;
 
-        this.lexicon = new Gaddag();
+        this.lexicon = new Gordon();
 
         console.time('wordlist')
         fs.createReadStream('Lexicon.txt', {encoding:'utf8'})
@@ -117,8 +54,6 @@ function LexiconLoader() {
             }).bind(this));
     }
     this.handleData = function(chunk) {
-        if (this.totalWords > 1)
-            return;
         this.data += chunk.toString();
         var split = '\r\n';
         var index = this.data.lastIndexOf('\r\n');
@@ -131,13 +66,9 @@ function LexiconLoader() {
             var words = this.data.substr(0,index).split(split);
             this.totalWords += words.length;
             this.data = this.data.substring(index + 1);
-            var i = 0;
             words.forEach(function(word) {
                 if (word.length > 15) return;
-                i++;
-                if (i > 10)
-                    return;
-                this.lexicon.add(word.toUpperCase())
+                this.lexicon.addWord(word.toUpperCase())
             }, this);
             log("Added " + this.totalWords + " words");
         }
@@ -145,16 +76,16 @@ function LexiconLoader() {
 
     this.loadJson = function (callback) {
         
-        this.lexicon = new Gaddag();
+        this.lexicon = new Gordon();
 
         var lexiconJS = "";
         console.time('json')
-        fs.createReadStream('lexicon.js', {encoding:'utf8'})
+        fs.createReadStream('lexiconr.json', {encoding:'utf8'})
             .on('data', function(chunk) {
                 lexiconJS += chunk.toString();
             })
             .on('end', (function () {
-                this.lexicon.setTrie(JSONR.parse(lexiconJS));
+                this.lexicon.setData(JSON.parse(lexiconJS));
                 // this.lexicon.setTrie(eval(lexiconJS));
                 console.timeEnd('json');
 
@@ -165,9 +96,5 @@ function LexiconLoader() {
         }).bind(this));
     }
 }
-
-
-// Grid.prototype = new Array();
-// Grid.prototype.constructor = Grid;
 
 module.exports.LexiconLoader = LexiconLoader;

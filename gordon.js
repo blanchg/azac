@@ -4,18 +4,43 @@ var log = require('./util.js').log;
 // module.exports.State = State;
 // module.exports.Arc = Arc;
 
-LETTERSETS = [];
+CS = [];
+STATESETS = [];
 var stateCounter = 0;
 
 var Gordon = function() {
 	this.separator = '>';
-	this.initial = new State();
-	this.letterSets = LETTERSETS;
-	// log('initial state: ' + JSON.stringify(this.initial));
+	this.initial = this.createState();
+	this.stateSets = STATESETS;
+	this.cs = CS;
+	// log('initial s: ' + JSON.stringify(this.initial));
 }
 
+Gordon.prototype.createState = function() {
+	var state = new State();
+	state.id = STATESETS.length;
+	STATESETS.push(state);
+	return state.id;
+};
+
+Gordon.prototype.getData = function() {
+	return {
+		initial: this.initial,
+		cs: this.cs,
+		stateSets: this.stateSets
+	};
+};
+
+Gordon.prototype.setData = function(data) {
+	this.initial = data.initial;
+	this.cs = data.cs;
+	this.stateSets = data.stateSets;
+	CS = this.cs;
+	STATESETS = this.stateSets;
+};
+
 var State = function() {
-	this.id = 'S' + stateCounter++;
+	this.id = 0;
 	Object.defineProperty(this, 'id', {enumerable:false});
 }
 State.prototype.toDot = function(dict) {
@@ -25,10 +50,13 @@ State.prototype.toDot = function(dict) {
 		log('key ' + key);
 		i++;
 		var arc = this[key];
-		if (dict[this.id +':' + arc.state.id] === undefined) {
-			result += this.id + ' -> ' + arc.state.id + '[label = " ' + key + (arc.letterSet?'|' + LETTERSETS[arc.letterSet]:'') + '"];\n';
-			result += arc.state.toDot(dict);
-			dict[this.id +':' + arc.state.id] = true;
+		log('arc ' + JSON.stringify(arc, null, 2))	;
+		var s = STATESETS[arc.s];
+		log('astate ' + arc.s + ' s ' + s);
+		if (dict[this.id +':' + s.id] === undefined) {
+			result += this.id + ' -> ' + s.id + '[label = " ' + key + (arc.cs?'|' + CS[arc.cs]:'') + '"];\n';
+			result += s.toDot(dict);
+			dict[this.id +':' + s.id] = true;
 		}
 	}
 	result = this.id + '[label=""];\n' + result;
@@ -36,65 +64,64 @@ State.prototype.toDot = function(dict) {
 }
 Object.defineProperty(State.prototype, 'toDot', {enumerable:false});
 
-var Arc = function(state) {
-	this.letterSet = null;
-	this.state = state;
+var Arc = function(s) {
+	this.s = s;
 }
 
 Arc.prototype.addLetter = function(ch) {
 	var letters = '';
-	if (this.letterSet !== null)
+	if (this.cs !== undefined)
 	{
-		letters = LETTERSETS[this.letterSet];
+		letters = CS[this.cs];
 	}
 	if (letters.indexOf(ch) !== -1)
 		return;
 
 	letters = (letters + ch).split('').sort().join('');
-	var index = LETTERSETS.indexOf(letters);
+	var index = CS.indexOf(letters);
 	if (index === -1) {
-		index = LETTERSETS.length;
-		LETTERSETS.push(letters);
+		index = CS.length;
+		CS.push(letters);
 	}
-	this.letterSet = index;
+	this.cs = index;
 
-	// if (this.letterSet == null)
-	// 	this.letterSet = ch;
+	// if (this.cs == null)
+	// 	this.cs = ch;
 	// else
-	// 	if (this.letterSet.indexOf(ch) === -1)
-	// 		this.letterSet += ch;
+	// 	if (this.cs.indexOf(ch) === -1)
+	// 		this.cs += ch;
 };
 
 Arc.prototype.getWords = function(prefix, forward) {
-	if (this.letterSet === null)
+	if (this.cs === undefined)
 		return null;
-	return this.letterSet.split('').map(function(letter) { return forward?prefix+letter:letter+prefix});
+	return this.cs.split('').map(function(letter) { return forward?prefix+letter:letter+prefix});
 };
 
-Gordon.prototype.addArc = function(state, ch) {
-	if (state[ch] === undefined)
-		state[ch] = new Arc(new State());
-	return state[ch].state;
+Gordon.prototype.addArc = function(s, ch) {
+	if (s[ch] === undefined)
+		s[ch] = new Arc(this.createState());
+	return STATESETS[s[ch].s];
 };
 
-Gordon.prototype.addFinalArc = function(state, c1, c2) {
-	this.addArc(state, c1);
-	var arc = state[c1];
+Gordon.prototype.addFinalArc = function(s, c1, c2) {
+	this.addArc(s, c1);
+	var arc = s[c1];
 	arc.addLetter(c2);
 };
 
-Gordon.prototype.forceArc = function(state, ch, forceState) {
+Gordon.prototype.forceArc = function(s, ch, forceState) {
 
-	if (state[ch] === undefined)
-		state[ch] = new Arc(forceState);
+	if (s[ch] === undefined)
+		s[ch] = new Arc(forceState.id);
 
-	if (state[ch].state !== forceState) {
-		// log("Can't force this state, a state already exists");
+	if (s[ch].s !== forceState) {
+		// log("Can't force this s, a s already exists");
 		return;
 		// log('Force Arc: ' + ch);
-		// log('  state[ch].state ' + JSON.stringify(state[ch].state));
+		// log('  s[ch].s ' + JSON.stringify(s[ch].s));
 		// log('  forceState ' + JSON.stringify(forceState));
-		// throw new Error("Can't force this state, a state already exists");
+		// throw new Error("Can't force this s, a s already exists");
 	}
 
 };
@@ -103,30 +130,25 @@ Gordon.prototype.addWord = function(word) {
 
 	if (word.length < 2) return;
 
-	var st = this.initial;
+	var initial = STATESETS[this.initial];
+	var st = initial;
 	var n = word.length - 1;
-	// log('initial state: ' + JSON.stringify(st));
+	// log('initial s: ' + JSON.stringify(st));
 	for (var i = n; i >= 2; i--) {
-		if (st === this.initial)
-			log('root: ' + word[i]);
 		st = this.addArc(st, word[i]);
 	};
 	this.addFinalArc(st, word[1], word[0]);
 
-	st = this.initial;
+	st = initial;
 	for (var i = n-1; i >= 0; i--) {
-		if (st === this.initial)
-			log('root: ' + word[i]);
 		st = this.addArc(st, word[i]);
 	};
-	this.addFinalArc(st, '>', word[n]);
+	this.addFinalArc(st, this.separator, word[n]);
 
 	for (var m = word.length - 2; m >= 0; m--) {
 		var forceSt = st;
-		var st = this.initial;
+		var st = initial;
 		for (var i = m - 1; i >= 0; i--) {
-			if (st === this.initial)
-				log('root: ' + word[i]);
 			st = this.addArc(st, word[i]);
 		};
 		st = this.addArc(st, '>');
@@ -147,7 +169,7 @@ Gordon.prototype.toDot = function() {
 	result += '{\n' +
 		'node[shape="circle",fixedsize=true,height=0.15,width=0.15,color=grey];\n' + 
 		'edge[color=grey,arrowsize=0.5,fontsize=8];\n';
-	result += this.initial.toDot({});
+	result += STATESETS[this.initial].toDot({});
 	result +='}}';
 	return result;
 }
