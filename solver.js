@@ -133,7 +133,7 @@ Solver.prototype.processRack = function(col, row, rack, replacements, hook, firs
 
 
 
-    var candidates = this.lexicon.findWordsWithRackAndHook(rack.slice(0), hook);
+    var candidates = this.grid.lexicon.findWordsWithRackAndHook(rack.slice(0), hook);
     // log("Rack: " + rack.join("") + " In Bag: " + bag.length + " Candidates: " + candidates.length);
     if (!candidates || candidates.length == 0)
         return;
@@ -190,6 +190,20 @@ Solver.prototype.saveProgress = function(grid, foundWords) {
     console.timeEnd('write');
 }
 
+Solver.prototype.getAnchors = function(firstWord) {
+    var result = [];
+    if (firstWord)
+    {
+        result.push([7,7]);
+    } else {
+
+    }
+}
+
+Solver.prototype.gen = function(first_argument) {
+    // body...
+};
+
 Solver.prototype.processAll = function() {
 try {
     log('ready to process');
@@ -210,51 +224,58 @@ try {
         
         var result = new Result(null, null, null, 0, 0, true, 0);
 
-        if (firstWord) {
-            col = 7;
-            for (row = 1; row < this.grid.size / 2; row++) {
-                this.processRack(col, row, this.rack, [], '', firstWord, false, result);
-            };
-            row = 7;
-            for (col = 1; col < this.grid.size / 2; col++) {
-                this.processRack(col, row, this.rack, [], '', firstWord, true, result);
-            }
-            firstWord = false;
-        } else {
-            var hookRow;
-            var hookCol;
-            var hookLetters;
-            for (row = 0; row < this.grid.size; row++) {
-                for (col = 0; col < this.grid.size; col++) {
-                    hookCol = col;
-                    hookLetters = [];
-                    for (hookRow = row; hookRow < this.grid.size; hookRow++) {
-                        var cell = this.grid.cell(hookCol, hookRow);
-                        var rawCell = this.grid.rawCell(hookCol, hookRow);
-                        if (cell != rawCell) {
-                            hookLetters.push('?');
-                        } else {
-                            hookLetters.push(rawCell);
-                        }
-                    };
-                    if (this.grid.beforeEmpty(col, row, false))
-                        this.processRack(col, row, this.rack.slice(0), [], hookLetters.join(''), firstWord, false, result);
-                    hookRow = row;
-                    hookLetters = [];
-                    for (hookCol = col; hookCol < this.grid.size; hookCol++) {
-                        var cell = this.grid.cell(hookCol, hookRow);
-                        var rawCell = this.grid.rawCell(hookCol, hookRow);
-                        if (cell != rawCell) {
-                            hookLetters.push('?');
-                        } else {
-                            hookLetters.push(rawCell);
-                        }
-                    };
-                    if (this.grid.beforeEmpty(col, row, true))
-                        this.processRack(col, row, this.rack.slice(0), [], hookLetters.join(''), firstWord, true, result);
-                }
-            };
-        }
+        var anchors = this.getAnchors(firstWord);
+        firstWord = false;
+
+        anchors.forEach(function (anchor) {
+            this.gen(anchor, result, rack, this.grid.lexicon.initial);
+        }, this);
+
+        // if (firstWord) {
+        //     col = 7;
+        //     for (row = 1; row < this.grid.size / 2; row++) {
+        //         this.processRack(col, row, this.rack, [], '', firstWord, false, result);
+        //     };
+        //     row = 7;
+        //     for (col = 1; col < this.grid.size / 2; col++) {
+        //         this.processRack(col, row, this.rack, [], '', firstWord, true, result);
+        //     }
+        //     firstWord = false;
+        // } else {
+        //     var hookRow;
+        //     var hookCol;
+        //     var hookLetters;
+        //     for (row = 0; row < this.grid.size; row++) {
+        //         for (col = 0; col < this.grid.size; col++) {
+        //             hookCol = col;
+        //             hookLetters = [];
+        //             for (hookRow = row; hookRow < this.grid.size; hookRow++) {
+        //                 var cell = this.grid.cell(hookCol, hookRow);
+        //                 var rawCell = this.grid.rawCell(hookCol, hookRow);
+        //                 if (cell != rawCell) {
+        //                     hookLetters.push('?');
+        //                 } else {
+        //                     hookLetters.push(rawCell);
+        //                 }
+        //             };
+        //             if (this.grid.beforeEmpty(col, row, false))
+        //                 this.processRack(col, row, this.rack.slice(0), [], hookLetters.join(''), firstWord, false, result);
+        //             hookRow = row;
+        //             hookLetters = [];
+        //             for (hookCol = col; hookCol < this.grid.size; hookCol++) {
+        //                 var cell = this.grid.cell(hookCol, hookRow);
+        //                 var rawCell = this.grid.rawCell(hookCol, hookRow);
+        //                 if (cell != rawCell) {
+        //                     hookLetters.push('?');
+        //                 } else {
+        //                     hookLetters.push(rawCell);
+        //                 }
+        //             };
+        //             if (this.grid.beforeEmpty(col, row, true))
+        //                 this.processRack(col, row, this.rack.slice(0), [], hookLetters.join(''), firstWord, true, result);
+        //         }
+        //     };
+        // }
 
         
 
