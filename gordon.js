@@ -180,5 +180,20 @@ Gordon.prototype.toDot = function() {
 	result +='}}';
 	return result;
 }
+Gordon.prototype.nextArc = function(arc, l) {
+    // log('Next arc ' + JSON.stringify(arc) + ' letter ' + l);
+    var state = this.stateSets[arc.s];
+    if (state !== undefined && state.hasOwnProperty(l)) {
+        return state[l];
+    } else {
+        return null;
+    }
+};
+Gordon.prototype.findWord = function(word) {
+	var arc = this.initialArc();
+	word.split('').forEach(function(letter) {
+		var letterArc = 
+	}, this);
+};
 
 module.exports = Gordon;

@@ -9,6 +9,30 @@ describe("Grid", function() {
  		grid = new Grid(15);
 	});
 
+	it("anchors horizontal", function() {
+		grid.addWord('ABC', 5, 7, true);
+		// console.log('Anchors: "' + grid.anchors.join('') + '"');
+		grid.printAnchors();
+		grid.anchors.filter(function(x) { return x == 1; }).should.have.length(11);
+
+		grid.addWord('ABC', 5, 6, true);
+		// console.log('Anchors: "' + grid.anchors.join('') + '"');
+		grid.printAnchors();
+		grid.anchors.filter(function(x) { return x == 1; }).should.have.length(16);
+	});
+
+	it("anchors vertical", function() {
+		grid.addWord('ABC', 7, 5, false);
+		// console.log('Anchors: "' + grid.anchors.join('') + '"');
+		grid.printAnchors();
+		grid.anchors.filter(function(x) { return x == 1; }).should.have.length(11);
+
+		grid.addWord('ABC', 6, 5, false);
+		// console.log('Anchors: "' + grid.anchors.join('') + '"');
+		grid.printAnchors();
+		grid.anchors.filter(function(x) { return x == 1; }).should.have.length(16);
+	});
+
 	it("should have size of 15", function() {
 		grid.size.should.be.exactly(15);
 	});

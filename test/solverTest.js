@@ -12,7 +12,7 @@ describe('Solver', function() {
 		solver = new Solver();
 	});
 
-	describe.only('rackMinus', function() {
+	describe('rackMinus', function() {
 		it('Should remove letter at start', function() {
 			solver.rackMinus('abc'.split(''), 'a').should.eql('bc'.split(''));
 		});

@@ -16,6 +16,8 @@ function Grid(newSize) {
         this.size = newSize;
         this.length = this.size*this.size;
         this.fill(' ', 0, this.length);
+        this.anchors = new Array(this.length);
+        this.anchors.fill(0, 0, this.length);
         
         this.board = 
         "T  d   T   d  T" +
@@ -58,6 +60,23 @@ Grid.prototype.wordH = function(col, row, word) {
         // log("Have that: " + this);
         this[i++] = letter;
     }, that);
+    var start = row * this.size + Math.max(col - 1, 0);
+    var end = row * this.size + Math.min(this.size, col + word.length + 1);
+    log(start + ' ' + end);
+    this.anchors.fill(1, start, end);
+
+    var row1 = Math.max(row - 1, 0) * this.size;
+    start = row1 + col;
+    end = start + word.length;
+    this.anchors.fill(1, start, end);
+
+    start = Math.min(row + 1, this.size) * this.size + col;
+    end = Math.min(row + 1, this.size) * this.size + col + word.length;
+    this.anchors.fill(1, start, end);
+    // for (var x = start; x < end; x++) {
+    // 	this.anchors[y * this.size]
+    // };
+    // this.anchors.fill(1, Math.max(i - 1,, Math.min(i + word.length, row*this.size + this.size));
     // this.print();
 }
 
@@ -70,6 +89,25 @@ Grid.prototype.wordV = function(col, row, word) {
         this[index] = letter;
     }, that);
     // this.print();
+    var start = Math.max(row - 1, 0);
+    var end = Math.min(this.size, row + word.length + 1);
+    for (var y = start; y < end; y++) {
+    	this.anchors[y * this.size + col] = 1;
+    };
+
+    var col1 = Math.max(col - 1, 0);
+    start = row;
+    end = row + word.length;
+    for (var y = start; y < end; y++) {
+    	this.anchors[y * this.size + col1] = 1;
+    };
+
+    col1 = Math.min(col + 1, this.size);
+    start = row;
+    end = row + word.length;
+    for (var y = start; y < end; y++) {
+    	this.anchors[y * this.size + col1] = 1;
+    };
 }
 
 Grid.prototype.addWord = function(word, col, row, horizontal) {
@@ -82,9 +120,10 @@ Grid.prototype.addWord = function(word, col, row, horizontal) {
 
 Grid.prototype.roomLeft = function(anchor, pos) {
     if (anchor.horizontal) {
-        return anchor.x + pos - 1 >= 0;
+        return (anchor.x + pos) - 1 >= 0;
     } else {
-        return anchor.y + pos - 1 >= 0;
+    	// log('    rl ' + anchor.y + ' + ' + pos + ' - 1 ');
+        return (anchor.y + pos) - 1 >= 0;
     }
 }
 
@@ -142,7 +181,11 @@ Grid.prototype.cell = function(col, row) {
 		return null;
 	}
     var i = row * this.size + col;
-    return ansiTrim(this[i]);
+    var val = this[i];
+    if (val === null || val === undefined) {
+    	log('called with ' + col + ', ' + row);
+    }
+    return ansiTrim(val);
 }
 
 Grid.prototype.letter = function(col, row) {
@@ -178,6 +221,12 @@ Grid.prototype.print = function (target) {
         target(line);
     };
 }
+
+Grid.prototype.printAnchors = function() {
+	for (var i = 0; i < this.size; i++) {
+		log(this.anchors.slice(i * this.size, i * this.size + this.size).join(''));
+	};
+};
 
 Grid.prototype.clone = function() {
     return new Grid(this);
@@ -220,6 +269,8 @@ Grid.prototype.letterMultiplier = function(cell) {
 }
 
 Grid.prototype.cellEmpty = function(col, row) {
+	if (col < 0 || row < 0)
+		return true;
 	var rawCell = this.rawCell(col, row);
 	var cell = this.cell(col, row); 
 	return cell !== rawCell || cell === ' ';

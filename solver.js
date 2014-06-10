@@ -168,7 +168,8 @@ Solver.prototype.processRack = function(col, row, rack, replacements, hook, firs
     return result;
 }
 
-var Result = function(replacements, hook, word, col, row, horizontal, score) {
+var Result = function(replacements, hook, word, col, row, horizontal, score, rack) {
+    this.rack = rack;
     this.replacements = replacements;
     this.hook = hook;
     this.word = word;
@@ -215,19 +216,25 @@ Solver.prototype.getAnchors = function(firstWord) {
         result.push(new Anchor(7,7,true));
         // result.push(new Anchor(7,7,false));
     } else {
-        // TODO
+        this.grid.anchors.forEach(function(x, i) {
+            if (x == 1) {
+                result.push(new Anchor(Math.floor(i / this.grid.size), i % this.grid.size, false));
+                result.push(new Anchor(Math.floor(i / this.grid.size), i % this.grid.size, true));
+            }
+        }, this);
     }
     return result;
 }
 
 Solver.prototype.nextArc = function(arc, l) {
+    return this.grid.lexicon.nextArc(arc, l);
     // log('Next arc ' + JSON.stringify(arc) + ' letter ' + l);
-    var state = this.grid.lexicon.stateSets[arc.s];
-    if (state !== undefined && state.hasOwnProperty(l)) {
-        return state[l];
-    } else {
-        return null;
-    }
+    // var state = this.grid.lexicon.stateSets[arc.s];
+    // if (state !== undefined && state.hasOwnProperty(l)) {
+    //     return state[l];
+    // } else {
+    //     return null;
+    // }
 };
 Solver.prototype.arcState = function(arc) {
     if (this.grid.lexicon.stateSets.hasOwnProperty(arc.s))
@@ -260,12 +267,25 @@ Solver.prototype.rackMinus = function(rack, letter) {
 };
 
 Solver.prototype.allowedHere = function(anchor, pos, letter) {
-    // TODO
+    var p = anchor.move(pos);
+    // log(cellCol + ', ' + cellRow + ' ' + horizontal);
+    var prefix = this.grid.prefix(p.x, p.y, !p.horizontal);
+    var suffix = this.grid.suffix(p.x, p.y, !p.horizontal);
+    // log('p ' + prefix + ' s ' + suffix);
+    var altWord = prefix + letter + suffix;
+    if (altWord.length > 1) {
+        log('alt word: ' + altWord);
+        return this.grid.lexicon.findWord(altWord.toUpperCase());
+    }
     return true;
 };
 
 Solver.prototype.gen = function(anchor, pos, result, rack, arc) {
     // log('Gen arc ' + JSON.stringify(arc));
+    // log('rack: ' + rack);
+    // log('result: ' + result);
+    // log('anchor: ' + anchor);
+    // log('pos: ' + pos);
     rack = rack.slice(0).sort();
     var l = this.grid.letter(anchor.x, anchor.y);
     if (l !== null) {
@@ -283,7 +303,7 @@ Solver.prototype.gen = function(anchor, pos, result, rack, arc) {
                     if (!this.allowedHere(anchor, pos, blankLetter))
                         continue
                     var nextArc = this.nextArc(arc, blankLetter);
-                    this.goOn(anchor, pos, letter, result, this.rackMinus(rack, letter), nextArc, arc);
+                    this.goOn(anchor, pos, blankLetter.toLowerCase(), result, this.rackMinus(rack, letter), nextArc, arc);
                 }
             } else {
                 if (!this.allowedHere(anchor, pos, letter))
@@ -295,24 +315,27 @@ Solver.prototype.gen = function(anchor, pos, result, rack, arc) {
     }
 };
 
-Solver.prototype.recordPlay = function(result, anchor, pos) {
+Solver.prototype.recordPlay = function(word, anchor, pos, rack) {
     var p = anchor.move(pos);
-    // log('record...' + p.x + ',' + p.y + (p.horizontal?'h ':'v ') + result);
-    this.results.push(new Result(null, null, result, p.x, p.y, p.horizontal, 0));
+    var score = this.grid.validateMove(word, p.x, p.y, p.horizontal, true, this.rack.length - rack.length);
+    log('record...' + p.x + ',' + p.y + (p.horizontal?'h ':'v ') + word);
+    this.results.push(new Result(null, null, word, p.x, p.y, p.horizontal, score, rack));
     // result. = '';
 };
 
 Solver.prototype.goOn = function(anchor, pos, l, result, rack, newArc, oldArc) {
-    // log('goOn newArc ' + JSON.stringify(newArc));
+    var movedAnchor = anchor.move(pos);
+    log('goOn newArc ' + JSON.stringify(newArc));
     if (pos <= 0) {
         var leftPos = anchor.move(pos - 1);
         result = l + result;
-        if (this.letterOnArc(oldArc, l) &&
+        if (this.letterOnArc(oldArc, l.toUpperCase()) &&
             this.grid.cellEmpty(leftPos.x, leftPos.y)) {
-            this.recordPlay(result, anchor, pos);
+            this.recordPlay(result, anchor, pos, rack);
         }
         if (newArc !== null) {
             if (this.grid.roomLeft(anchor, pos)) {
+                // log('  goOn:' + anchor.x + ',' + anchor.y + ' ' + anchor.horizontal + ' ' + pos);
                 this.gen(anchor, pos - 1, result, rack, newArc);
             }
 
@@ -326,9 +349,9 @@ Solver.prototype.goOn = function(anchor, pos, l, result, rack, newArc, oldArc) {
     } else if (pos > 0) {
         result += l;
         var rightPos = anchor.move(pos + 1);
-        if (this.letterOnArc(oldArc, l) && 
+        if (this.letterOnArc(oldArc, l.toUpperCase()) && 
             this.grid.cellEmpty(rightPos.x, rightPos.y)) {
-            this.recordPlay(result, anchor, pos - result.length);
+            this.recordPlay(result, anchor, pos - result.length, rack);
         }
         var right = pos + 1;
         if (newArc !== null && 
@@ -362,12 +385,25 @@ try {
         firstWord = false;
 
         this.results = [];
-        anchors.forEach(function (anchor) {
-            this.gen(anchor, 0, "", this.rack, this.grid.lexicon.initialArc());
+        anchors.forEach(function (anchor, i) {
+            log(i);
+            this.gen(anchor, 0, "", this.rack.slice(0), this.grid.lexicon.initialArc());
+            log(' ' + i);
         }, this);
 
         this.results.sort();
-        log("Results: " + this.results.join('\n'));
+        // log("Results: " + this.results.join('\n'));
+        log("Found " + this.results.length + " words");
+        // this.results = this.results.unique();
+        // log("Found " + this.results.length + " unique words");
+
+        this.results.forEach(function (r) {
+            log(' ' + r.word + ' = ' + r.score);
+            if (r.score > result.score) {
+                result = r;
+            }
+        }, this);
+        // log("Results: " + this.results.join('\n'));
 
         // if (firstWord) {
         //     col = 7;
@@ -425,7 +461,7 @@ try {
         }
         // log("Scoring word: " + word + ' replacements: ' + wordReplacements + ' hook: ' + wordHook);
         var wordRack = this.rack.slice(0).join('');
-        this.rack = this.reduceRack(this.rack.slice(0), result.word, result.hook.split(''), true, result.replacements);
+        this.rack = result.rack; //this.reduceRack(this.rack.slice(0), result.word, result.hook.split(''), true, result.replacements);
         var position = this.ROWS[result.row] + this.COLUMNS[result.col];
         if (!result.horizontal) {
             position = this.COLUMNS[result.col] + this.ROWS[result.row];
