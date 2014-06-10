@@ -80,6 +80,22 @@ Grid.prototype.addWord = function(word, col, row, horizontal) {
     }
 }
 
+Grid.prototype.roomLeft = function(anchor, pos) {
+    if (anchor.horizontal) {
+        return anchor.x + pos - 1 >= 0;
+    } else {
+        return anchor.y + pos - 1 >= 0;
+    }
+}
+
+Grid.prototype.roomRight = function(anchor, pos) {
+    if (anchor.horizontal) {
+        return anchor.x + pos + 1 < this.size;
+    } else {
+        return anchor.y + pos + 1 < this.size;
+    }
+}
+
 Grid.prototype.fits = function(col, row, horizontal, word) {
 	if (col < 0 || row < 0)
 		return false;
@@ -128,6 +144,16 @@ Grid.prototype.cell = function(col, row) {
     var i = row * this.size + col;
     return ansiTrim(this[i]);
 }
+
+Grid.prototype.letter = function(col, row) {
+    var raw = this.rawCell(col, row);
+    var cell = this.cell(col, row);
+    if (raw === cell) {
+        return cell;
+    } else {
+        return null;
+    }
+};
 
 Grid.prototype.print = function (target) {
 	var trim = true;

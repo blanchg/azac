@@ -12,6 +12,21 @@ describe('Solver', function() {
 		solver = new Solver();
 	});
 
+	describe.only('rackMinus', function() {
+		it('Should remove letter at start', function() {
+			solver.rackMinus('abc'.split(''), 'a').should.eql('bc'.split(''));
+		});
+		it('Should remove letter at end', function() {
+			solver.rackMinus('abc'.split(''), 'c').should.eql('ab'.split(''));
+		});
+		it('Should remove letter in middle', function() {
+			solver.rackMinus('abc'.split(''), 'b').should.eql('ac'.split(''));
+		});
+		it('Should remove single duplicate letter at start', function() {
+			solver.rackMinus('aac'.split(''), 'a').should.eql('ac'.split(''));
+		});
+	});
+
 	describe('permutations', function() {
 		it('Should return all permutations of ab', function () {
 			var ab = solver.permutations('ab');

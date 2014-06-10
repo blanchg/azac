@@ -178,6 +178,10 @@ var Result = function(replacements, hook, word, col, row, horizontal, score) {
     this.score = score;
 }
 
+Result.prototype.toString = function() {
+    return this.word + '[' + this.col + ', ' + this.row + ']';
+};
+
 Solver.prototype.saveProgress = function(grid, foundWords) {
 
     log('Saving the progress for later');
@@ -190,18 +194,147 @@ Solver.prototype.saveProgress = function(grid, foundWords) {
     console.timeEnd('write');
 }
 
+var Anchor = function(x,y,horizontal) {
+    this.x = x;
+    this.y = y;
+    this.horizontal = horizontal;
+}
+
+Anchor.prototype.move = function(pos) {
+    if (this.horizontal) {
+        return new Anchor(this.x + pos, this.y, this.horizontal);
+    } else {
+        return new Anchor(this.x, this.y + pos, this.horizontal);
+    }
+};
+
 Solver.prototype.getAnchors = function(firstWord) {
     var result = [];
     if (firstWord)
     {
-        result.push([7,7]);
+        result.push(new Anchor(6,7,true));
+        // result.push(new Anchor(7,6,false));
     } else {
-
+        // TODO
     }
+    return result;
 }
 
-Solver.prototype.gen = function(first_argument) {
-    // body...
+Solver.prototype.nextArc = function(arc, l) {
+    // log('Next arc ' + JSON.stringify(arc) + ' letter ' + l);
+    var state = this.grid.lexicon.stateSets[arc.s];
+    if (state !== undefined && state.hasOwnProperty(l)) {
+        return state[l];
+    } else {
+        return null;
+    }
+};
+Solver.prototype.arcState = function(arc) {
+    if (this.grid.lexicon.stateSets.hasOwnProperty(arc.s))
+        return this.grid.lexicon.stateSets[arc.s];
+    return null;
+}
+Solver.prototype.arcChar = function(arc) {
+    if (arc.hasOwnProperty("cs") && this.grid.lexicon.cs.hasOwnProperty(arc.cs))
+        return this.grid.lexicon.cs[arc.cs];
+    return null;
+}
+Solver.prototype.letterOnArc = function(arc, letter) {
+    if (!arc)
+        return false;
+    var chars = this.arcChar(arc);
+    var result = chars !== null && chars.indexOf(letter) != -1
+    // log('arc: ' + JSON.stringify(arc) + '\n  letter: ' + letter + '\n  chars: ' + chars + '\n==' + result);
+    return result;
+};
+
+Solver.prototype.rackMinus = function(rack, letter) {
+    var index = rack.indexOf(letter);
+    if (index == -1)
+        return null;
+    if (index == 0)
+        return rack.slice(1);
+    if (index == rack.length - 1)
+        return rack.slice(0, index);
+    return rack.slice(0, index).concat(rack.slice(index + 1));
+};
+
+Solver.prototype.allowedHere = function(anchor, pos, letter) {
+    // TODO
+    return true;
+};
+
+Solver.prototype.gen = function(anchor, pos, result, rack, arc) {
+    // log('Gen arc ' + JSON.stringify(arc));
+    rack = rack.slice(0).sort();
+    var l = this.grid.letter(anchor.x, anchor.y);
+    if (l !== null) {
+        var nextArc = this.nextArc(arc, l);
+        if (nextArc !== null)
+            this.goOn(anchor, pos, l, result, rack, nextArc, arc);
+    } else if (rack.length > 0) {
+        var lastLetter = null;
+        rack.forEach(function (letter) {
+            if (letter == lastLetter)
+                return;
+            lastLetter = letter;
+            if (letter === '?') {
+                for (var blankLetter in this.arcState(arc)) {
+                    if (!this.allowedHere(anchor, pos, blankLetter))
+                        continue
+                    var nextArc = this.nextArc(arc, blankLetter);
+                    this.goOn(anchor, pos, letter, result, this.rackMinus(rack, letter), nextArc, arc);
+                }
+            } else {
+                if (!this.allowedHere(anchor, pos, letter))
+                    return;
+                var nextArc = this.nextArc(arc, letter);
+                this.goOn(anchor, pos, letter, result, this.rackMinus(rack, letter), nextArc, arc);
+            }
+        }, this);
+    }
+};
+
+Solver.prototype.recordPlay = function(result, anchor, pos) {
+    var p = anchor.move(pos);
+    log('record...' + p.x + ',' + p.y + (p.horizontal?'h ':'v ') + result);
+    this.results.push(new Result(null, null, result, p.x, p.y, p.horizontal, 0));
+    // result. = '';
+};
+
+Solver.prototype.goOn = function(anchor, pos, l, result, rack, newArc, oldArc) {
+    // log('goOn newArc ' + JSON.stringify(newArc));
+    if (pos <= 0) {
+        var leftPos = anchor.move(pos - 1);
+        result = l + result;
+        if (this.letterOnArc(oldArc, l) &&
+            this.grid.cellEmpty(leftPos.x, leftPos.y)) {
+            this.recordPlay(result, anchor, pos);
+        }
+        if (newArc !== null) {
+            if (this.grid.roomLeft(anchor, pos)) {
+                this.gen(anchor, pos - 1, result, rack, newArc);
+            }
+
+            var newArc = this.nextArc(newArc, '>');
+            if (newArc !== null &&
+                this.grid.cellEmpty(leftPos.x, leftPos.y) &&
+                this.grid.roomRight(anchor, 0)) {
+                this.gen(anchor, 1, result, rack, newArc);
+            }
+        }
+    } else if (pos > 0) {
+        result += l;
+        if (this.letterOnArc(oldArc, l) && 
+            this.grid.cellEmpty(anchor.move(pos).x, anchor.move(pos).y)) {
+            this.recordPlay(result, anchor, pos);
+        }
+        var right = pos + 1;
+        if (newArc !== null && 
+            this.grid.roomRight(anchor, pos)) {
+            this.gen(anchor, pos + 1, result, rack, newArc);
+        }
+    }
 };
 
 Solver.prototype.processAll = function() {
@@ -227,9 +360,13 @@ try {
         var anchors = this.getAnchors(firstWord);
         firstWord = false;
 
+        this.results = [];
         anchors.forEach(function (anchor) {
-            this.gen(anchor, result, rack, this.grid.lexicon.initial);
+            this.gen(anchor, 0, "", this.rack, this.grid.lexicon.initialArc());
         }, this);
+
+        this.results.sort();
+        log("Results: " + this.results.join('\n'));
 
         // if (firstWord) {
         //     col = 7;

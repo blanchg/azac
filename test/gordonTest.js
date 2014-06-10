@@ -36,7 +36,7 @@ describe('Gordon', function() {
 			log(g.toDot());
 		});
 
-		it.only('all', function() {
+		it('all', function() {
 			var g = new Gordon();
 			g.addAll('ALL,BALL,CALL'.split(','));
 			log(g.toDot());

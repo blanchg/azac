@@ -16,6 +16,13 @@ var Gordon = function() {
 	// log('initial s: ' + JSON.stringify(this.initial));
 }
 
+Gordon.prototype.initialArc = function() {
+	if (this.ia === undefined) {
+		this.ia = new Arc(this.initial);
+	}
+	return this.ia;
+}
+
 Gordon.prototype.createState = function() {
 	var state = new State();
 	state.id = STATESETS.length;
