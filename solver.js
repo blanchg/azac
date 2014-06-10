@@ -297,7 +297,7 @@ Solver.prototype.gen = function(anchor, pos, result, rack, arc) {
 
 Solver.prototype.recordPlay = function(result, anchor, pos) {
     var p = anchor.move(pos);
-    log('record...' + p.x + ',' + p.y + (p.horizontal?'h ':'v ') + result);
+    // log('record...' + p.x + ',' + p.y + (p.horizontal?'h ':'v ') + result);
     this.results.push(new Result(null, null, result, p.x, p.y, p.horizontal, 0));
     // result. = '';
 };
@@ -325,8 +325,9 @@ Solver.prototype.goOn = function(anchor, pos, l, result, rack, newArc, oldArc) {
         }
     } else if (pos > 0) {
         result += l;
+        var rightPos = anchor.move(pos + 1);
         if (this.letterOnArc(oldArc, l) && 
-            this.grid.cellEmpty(anchor.move(pos).x, anchor.move(pos).y)) {
+            this.grid.cellEmpty(rightPos.x, rightPos.y)) {
             this.recordPlay(result, anchor, pos - result.length);
         }
         var right = pos + 1;
