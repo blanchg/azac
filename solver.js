@@ -212,8 +212,8 @@ Solver.prototype.getAnchors = function(firstWord) {
     var result = [];
     if (firstWord)
     {
-        result.push(new Anchor(6,7,true));
-        // result.push(new Anchor(7,6,false));
+        result.push(new Anchor(7,7,true));
+        // result.push(new Anchor(7,7,false));
     } else {
         // TODO
     }
@@ -275,7 +275,7 @@ Solver.prototype.gen = function(anchor, pos, result, rack, arc) {
     } else if (rack.length > 0) {
         var lastLetter = null;
         rack.forEach(function (letter) {
-            if (letter == lastLetter)
+            if (letter === lastLetter)
                 return;
             lastLetter = letter;
             if (letter === '?') {
@@ -327,7 +327,7 @@ Solver.prototype.goOn = function(anchor, pos, l, result, rack, newArc, oldArc) {
         result += l;
         if (this.letterOnArc(oldArc, l) && 
             this.grid.cellEmpty(anchor.move(pos).x, anchor.move(pos).y)) {
-            this.recordPlay(result, anchor, pos);
+            this.recordPlay(result, anchor, pos - result.length);
         }
         var right = pos + 1;
         if (newArc !== null && 
