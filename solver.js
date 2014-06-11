@@ -228,31 +228,12 @@ Solver.prototype.getAnchors = function(firstWord) {
 
 Solver.prototype.nextArc = function(arc, l) {
     return this.grid.lexicon.nextArc(arc, l);
-    // log('Next arc ' + JSON.stringify(arc) + ' letter ' + l);
-    // var state = this.grid.lexicon.stateSets[arc.s];
-    // if (state !== undefined && state.hasOwnProperty(l)) {
-    //     return state[l];
-    // } else {
-    //     return null;
-    // }
 };
 Solver.prototype.arcState = function(arc) {
-    if (this.grid.lexicon.stateSets.hasOwnProperty(arc.s))
-        return this.grid.lexicon.stateSets[arc.s];
-    return null;
-}
-Solver.prototype.arcChar = function(arc) {
-    if (arc.hasOwnProperty("cs") && this.grid.lexicon.cs.hasOwnProperty(arc.cs))
-        return this.grid.lexicon.cs[arc.cs];
-    return null;
+    return this.grid.lexicon.arcState(arc);
 }
 Solver.prototype.letterOnArc = function(arc, letter) {
-    if (!arc)
-        return false;
-    var chars = this.arcChar(arc);
-    var result = chars !== null && chars.indexOf(letter) != -1
-    // log('arc: ' + JSON.stringify(arc) + '\n  letter: ' + letter + '\n  chars: ' + chars + '\n==' + result);
-    return result;
+    return this.grid.lexicon.letterOnArc(arc, letter);
 };
 
 Solver.prototype.rackMinus = function(rack, letter) {
@@ -325,7 +306,7 @@ Solver.prototype.recordPlay = function(word, anchor, pos, rack) {
 
 Solver.prototype.goOn = function(anchor, pos, l, result, rack, newArc, oldArc) {
     var movedAnchor = anchor.move(pos);
-    log('goOn newArc ' + JSON.stringify(newArc));
+    // log('goOn newArc ' + JSON.stringify(newArc));
     if (pos <= 0) {
         var leftPos = anchor.move(pos - 1);
         result = l + result;

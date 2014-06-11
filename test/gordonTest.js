@@ -41,6 +41,21 @@ describe('Gordon', function() {
 			g.addAll('ALL,BALL,CALL'.split(','));
 			log(g.toDot());
 		});
+
+		it.only('findWord', function() {
+			var g = new Gordon();
+			g.addWord('CARE');
+			g.addWord('CARD');
+			g.addWord('CARED');
+			log(g.toDot());
+			g.findWord('CARE').should.be.ok;
+			g.findWord('CARD').should.be.ok;
+			g.findWord('CARED').should.be.ok;
+			g.findWord('CARES').should.not.be.ok;
+			g.findWord('CAR').should.not.be.ok;
+
+
+		});
 	});
 
 });

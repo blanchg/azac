@@ -66,7 +66,7 @@ State.prototype.toDot = function(dict) {
 			dict[this.id +':' + s.id] = true;
 		}
 	}
-	result = this.id + '[label=""];\n' + result;
+	result = this.id + '[label="' + this.id + '"];\n' + result;
 	return result;
 }
 Object.defineProperty(State.prototype, 'toDot', {enumerable:false});
@@ -174,7 +174,7 @@ Gordon.prototype.toString = function() {
 Gordon.prototype.toDot = function() {
 	var result = 'digraph graphname {\n';
 	result += '{\n' +
-		'node[shape="circle",fixedsize=true,height=0.15,width=0.15,color=grey];\n' + 
+		'node[shape="circle",fixedsize=true,height=0.15,width=0.15,color=grey,fontsize=8,fontcolor=grey];\n' + 
 		'edge[color=grey,arrowsize=0.5,fontsize=8];\n';
 	result += STATESETS[this.initial].toDot({});
 	result +='}}';
@@ -189,11 +189,49 @@ Gordon.prototype.nextArc = function(arc, l) {
         return null;
     }
 };
+Gordon.prototype.arcState = function(arc) {
+    if (this.stateSets.hasOwnProperty(arc.s))
+        return this.stateSets[arc.s];
+    return null;
+};
+Gordon.prototype.arcChar = function(arc) {
+    if (arc.hasOwnProperty("cs") && this.cs.hasOwnProperty(arc.cs))
+        return this.cs[arc.cs];
+    return null;
+};
+Gordon.prototype.letterOnArc = function(arc, letter) {
+    if (!arc)
+        return false;
+    var chars = this.arcChar(arc);
+    var result = chars !== null && chars.indexOf(letter) != -1
+    // log('arc: ' + JSON.stringify(arc) + '\n  letter: ' + letter + '\n  chars: ' + chars + '\n==' + result);
+    return result;
+};
 Gordon.prototype.findWord = function(word) {
 	var arc = this.initialArc();
-	word.split('').forEach(function(letter) {
-		var letterArc = 
+	var failed = word.split('').some(function(letter,i) {
+
+		var end = i == word.length - 1;
+		log('letter: ' + letter + ' end ' + end + ' arc ' + JSON.stringify(arc));
+		if (end) {
+			var separatorArc = this.nextArc(arc, this.separator);
+			return !(this.letterOnArc(arc, letter) || this.letterOnArc(separatorArc, letter));
+		} else {
+			var letterArc = this.nextArc(arc, letter);
+			if (letterArc === null) {
+				letterArc = this.nextArc(arc, this.separator);
+				if (letterArc !== null) {
+					letterArc = this.nextArc(letterArc, letter);
+				}
+			}
+			if (letterArc === null) {
+				return true
+			}
+			arc = letterArc;
+			return false;
+		}
 	}, this);
+	return !failed;
 };
 
 module.exports = Gordon;
