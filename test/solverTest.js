@@ -3,6 +3,7 @@
 // var path = require('path');
 var log = require('../util.js').log;
 var Solver = require('../solver.js');
+var Gordon = require('../gordon.js');
 var should = require("should");
 
 var solver;
@@ -92,6 +93,40 @@ describe('Solver', function() {
 				.and.have.length(3);
 		});
 
+	});
+
+	describe.only('gaddag algorithm', function() {
+		it('should not find crop', function() {
+			solver.lexicon = new Gordon();
+			solver.lexicon.addWord('CROP');
+			// solver.lexicon.addWord('ROPE');
+			solver.lexicon.addWord('OPIATE');
+			// solver.lexicon.addWord('CROPS');
+			// solver.lexicon.addAll(["CROP", "CROPLAND", "CROPLANDS", "CROPLESS", "CROPPED", "CROPPER", "CROPPERS", "CROPPIE", "CROPPIES", "CROPPING", "CROPS"]);
+			solver.grid.lexicon = solver.lexicon;
+			// solver.grid.addWord('OPIATE', 2, 7, true);
+			// solver.grid.print();
+			log(solver.lexicon.cs.join(','));
+			// log(solver.lexicon.toDot());
+			// return;
+			var A = Solver.prototype.Anchor;
+
+			// FIRST WORD
+			var anchor = new A(2,7,true);
+			solver.results = [];
+			solver.wordDict = {};
+		    solver.gen(anchor, 0, "", 'OPIATE'.split(''), solver.lexicon.initialArc(), true);
+			solver.results.should.have.length(1);
+			solver.grid.addWord('OPIATE', 2, 7, true);
+
+			// SECOND WORD
+			solver.results = [];
+			solver.wordDict = {};
+			var anchor = new A(2,7,true);
+		    solver.gen(anchor, 0, "", 'CROP'.split(''), solver.lexicon.initialArc(), false);
+			log('Results: ' + JSON.stringify(solver.results, null, 2));
+			solver.results.should.have.length(0);
+		});
 	});
 
 });

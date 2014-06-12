@@ -367,12 +367,12 @@ Grid.prototype.validateMove = function(word, col, row, horizontal, firstWord, ra
     var middleColRow = Math.floor(this.size / 2);
     var letterPlaced = false;
 
-    if (!this.beforeEmpty(col, row, horizontal)) {
-        return -1;
-    }
-    if (!this.afterEmpty(word, col, row, horizontal)) {
-        return -1;
-    }
+    // if (!this.beforeEmpty(col, row, horizontal)) {
+    //     return -1;
+    // }
+    // if (!this.afterEmpty(word, col, row, horizontal)) {
+    //     return -1;
+    // }
 
     var failed = word.split('').some(function(letter, i) {
         var cellCol = horizontal?col+i:col;
@@ -419,7 +419,7 @@ Grid.prototype.validateMove = function(word, col, row, horizontal, firstWord, ra
 	        }
 		}
 
-        // log(rawCell + ' ' + letter + ' ' + letterScore + ' * ' + letterMultiplier + ' = ' + (letterScore * letterMultiplier + altScore) + ' (' + altScore + ')');
+        log(rawCell + ' ' + letter + ' ' + letterScore + ' * ' + letterMultiplier + ' = ' + (letterScore * letterMultiplier + altScore) + ' (' + altScore + ')');
         totalScore += letterScore * letterMultiplier;
         totalAltScore += altScore;
         totalWordMultiplier = totalWordMultiplier * wordMultiplier;

@@ -42,7 +42,7 @@ describe('Gordon', function() {
 			log(g.toDot());
 		});
 
-		it.only('findWord', function() {
+		it('findWord', function() {
 			var g = new Gordon();
 			g.addWord('CARE');
 			g.addWord('CARD');
@@ -53,6 +53,27 @@ describe('Gordon', function() {
 			g.findWord('CARED').should.be.ok;
 			g.findWord('CARES').should.not.be.ok;
 			g.findWord('CAR').should.not.be.ok;
+			g.findWord('CA').should.not.be.ok;
+			g.findWord('C').should.not.be.ok;
+			g.findWord('CE').should.not.be.ok;
+
+
+		});
+
+		it('find reversed word', function() {
+			var g = new Gordon();
+			g.addWord('CARE');
+			g.addWord('CARD');
+			g.addWord('CARED');
+			log(g.toDot());
+			g.findWord('ERAC').should.not.be.ok;
+			// g.findWord('CARD').should.be.ok;
+			// g.findWord('CARED').should.be.ok;
+			// g.findWord('CARES').should.not.be.ok;
+			// g.findWord('CAR').should.not.be.ok;
+			// g.findWord('CA').should.not.be.ok;
+			// g.findWord('C').should.not.be.ok;
+			// g.findWord('CE').should.not.be.ok;
 
 
 		});
