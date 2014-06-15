@@ -113,11 +113,11 @@ Gordon.prototype.addArc = function(s, ch) {
 
 Gordon.prototype.addFinalArc = function(s, c1, c2) {
 	var state = this.addArc(s, c1);
-	log('Add final arc from s: ' + s.id + ' ' + JSON.stringify(s) + ' for ' + c1 + ' = ' + JSON.stringify(state));
+	// log('Add final arc from s: ' + s.id + ' ' + JSON.stringify(s) + ' for ' + c1 + ' = ' + JSON.stringify(state));
 	var arc = s[c1];
-	log('Add char ' + c2 + ' to arc ' + JSON.stringify(arc));
+	// log('Add char ' + c2 + ' to arc ' + JSON.stringify(arc));
 	arc.addLetter(c2);
-	log('Arc ' +  JSON.stringify(arc) + ' char: ' + this.arcChar(arc));
+	// log('Arc ' +  JSON.stringify(arc) + ' char: ' + this.arcChar(arc));
 };
 
 Gordon.prototype.forceArc = function(s, ch, forceState) {
@@ -127,9 +127,9 @@ Gordon.prototype.forceArc = function(s, ch, forceState) {
 
 	if (s[ch].s !== forceState.id) {
 		// log("Can't force this s already exists");
-		log('s: ' + JSON.stringify(s));
-		log('c: ' + ch);
-		log('force: ' + forceState);
+		// log('s: ' + JSON.stringify(s));
+		// log('c: ' + ch);
+		// log('force: ' + forceState);
 		return;
 		// log('Force Arc: ' + ch);
 		// log('  s[ch].s ' + JSON.stringify(s[ch].s));
@@ -147,23 +147,23 @@ Gordon.prototype.addWord = function(word) {
 	var st = initial;
 	var n = word.length - 1;
 	// log('initial s: ' + JSON.stringify(st));
-	log("n: " + n);
-	log("n -> 0");
+	// log("n: " + n);
+	// log("n -> 0");
 	for (var i = n; i >= 2; i--) {
-		log(i + ": " + word[i]);
+		// log(i + ": " + word[i]);
 		st = this.addArc(st, word[i]);
 	};
-	log("1: " + word[1]);
-	log("0: " + word[0]);
+	// log("1: " + word[1]);
+	// log("0: " + word[0]);
 	this.addFinalArc(st, word[1], word[0]);
 
-	log("n-1 -> 0 : n");
+	// log("n-1 -> 0 : n");
 	st = initial;
 	for (var i = n-1; i >= 0; i--) {
-		log(i + ": " + word[i]);
+		// log(i + ": " + word[i]);
 		st = this.addArc(st, word[i]);
 	};
-	log(n + ": " + word[n]);
+	// log(n + ": " + word[n]);
 	this.addFinalArc(st, this.separator, word[n]);
 
 	for (var m = n - 2; m >= 0; m--) {
@@ -196,6 +196,8 @@ Gordon.prototype.toDot = function() {
 }
 Gordon.prototype.nextArc = function(arc, l) {
     // log('Next arc ' + JSON.stringify(arc) + ' letter ' + l);
+    if (arc === null)
+    	return null;
     var state = this.stateSets[arc.s];
     if (state !== undefined) {
     	if (state.hasOwnProperty(l)) {
@@ -218,6 +220,8 @@ Gordon.prototype.arcState = function(arc) {
     return null;
 };
 Gordon.prototype.arcChar = function(arc) {
+	if (arc === null)
+		return null;
     if (arc.hasOwnProperty("cs") && CS.hasOwnProperty(arc.cs))
         return CS[arc.cs];
     return null;
@@ -231,14 +235,15 @@ Gordon.prototype.letterOnArc = function(arc, letter) {
     return result;
 };
 Gordon.prototype.findWord = function(word) {
-	var arc = this.nextArc(this.initialArc(), this.separator);
+	var arc = this.initialArc();
 	if (!arc)
 		return false;
 	var found = false;
 	var failed = word.split('').some(function(letter,i) {
 
 		var end = i == word.length - 1;
-		// log('letter: ' + letter + ' end ' + end + ' arc ' + JSON.stringify(arc));
+		var second = i == 1;
+		// log('letter: ' + letter + ' end ' + end + ' second ' + second + ' arc ' + JSON.stringify(arc));
 		if (end) {
 			var separatorArc = this.nextArc(arc, this.separator);
 			if (this.letterOnArc(arc, letter) || this.letterOnArc(separatorArc, letter)) {
@@ -247,11 +252,16 @@ Gordon.prototype.findWord = function(word) {
 			}
 			return false;
 		} else {
-			var letterArc = this.nextArc(arc, letter);
-			if (letterArc === null) {
-				letterArc = this.nextArc(arc, this.separator);
-				if (letterArc !== null) {
-					letterArc = this.nextArc(letterArc, letter);
+			var letterArc;
+			if (second) {
+				letterArc = this.nextArc(this.nextArc(arc, this.separator), letter);
+			} else {
+				letterArc = this.nextArc(arc, letter);
+				if (letterArc === null) {
+					letterArc = this.nextArc(arc, this.separator);
+					if (letterArc !== null) {
+						letterArc = this.nextArc(letterArc, letter);
+					}
 				}
 			}
 			if (letterArc === null) {

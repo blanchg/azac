@@ -47,7 +47,7 @@ describe('Gordon', function() {
 			g.addWord('CARE');
 			g.addWord('CARD');
 			g.addWord('CARED');
-			log(g.toDot());
+			// log(g.toDot());
 			g.findWord('CARE').should.be.ok;
 			g.findWord('CARD').should.be.ok;
 			g.findWord('CARED').should.be.ok;

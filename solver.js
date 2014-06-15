@@ -291,7 +291,7 @@ Solver.prototype.gen = function(anchor, pos, result, rack, arc, firstWord, space
         var nextArc = this.nextArc(arc, l);
         // log('  nextArc: ' + nextArc);
         // if (nextArc !== null)
-            this.goOn(anchor, pos, l, result, rack, nextArc, arc, firstWord);
+            this.goOn(anchor, pos, l, result, rack, nextArc, arc, firstWord, space);
     } else if (rack.length > 0) {
         // var lastLetter = null;
         rack.forEach(function (letter) {
@@ -300,7 +300,8 @@ Solver.prototype.gen = function(anchor, pos, result, rack, arc, firstWord, space
             // lastLetter = letter;
             if (letter === '?') {
                 // var blankLetters = this.
-                var chars = this.arcChar(arc).split('');
+                var allChars = this.arcChar(arc);
+                var chars = (allChars !== null)?allChars.split(''):[];
                 for (var blankLetter in this.arcState(arc)) {
                     if (chars.indexOf(blankLetter) == -1)
                         chars.push(blankLetter);
@@ -309,15 +310,15 @@ Solver.prototype.gen = function(anchor, pos, result, rack, arc, firstWord, space
                     if (!this.allowedHere(anchor, pos, blankLetter)) 
                         return;
                     var nextArc = this.nextArc(arc, blankLetter);
-                    this.goOn(anchor, pos, blankLetter.toLowerCase(), result, this.rackMinus(rack, letter), nextArc, arc, firstWord);
+                    this.goOn(anchor, pos, blankLetter.toLowerCase(), result, this.rackMinus(rack, letter), nextArc, arc, firstWord, space);
                 }, this);
             } else {
                 if (!this.allowedHere(anchor, pos, letter)) {
-                    log(space + 'xxxxxxxx');
+                    // log(space + 'xxxxxxxx');
                     return;
                 }
                 var nextArc = this.nextArc(arc, letter);
-                log(space + 'l: ' + letter);
+                // log(space + 'l: ' + letter);
                 this.goOn(anchor, pos, letter, result, this.rackMinus(rack, letter), nextArc, arc, firstWord, space);
             }
         }, this);
@@ -325,7 +326,7 @@ Solver.prototype.gen = function(anchor, pos, result, rack, arc, firstWord, space
 };
 
 Solver.prototype.recordPlay = function(word, anchor, pos, rack, firstWord) {
-    log('Record: ' + word);
+    log('Record: ' + word + ' anchor: ' + JSON.stringify(anchor) + ' pos ' + pos);
     var p = anchor.move(pos);
     var key = word + (p.x + (p.y * this.grid.size)) + (p.horizontal?'h':'v');
     if (this.wordDict[key] !== undefined) {
@@ -333,12 +334,11 @@ Solver.prototype.recordPlay = function(word, anchor, pos, rack, firstWord) {
     }
     this.wordDict[key] = true;
     var score = this.grid.validateMove(word, p.x, p.y, p.horizontal, firstWord, this.rack.length - rack.length);
+    log('located at ' + p.x + ', ' + p.y + ' ' + key + ' = ' + score);
+    log('Score: ' + score + ' firstWord ' + firstWord);
     if (score == -1) {
         return;
     }
-    // if (word == 'DID' && p.horizontal) {
-    //     log('DID ' + p.x + ', ' + p.y + ' ' + key + ' = ' + score);
-    // }
     log('record...' + p.x + ',' + p.y + (p.horizontal?'h ':'v ') + word);
     this.results.push(new Result(null, null, word, p.x, p.y, p.horizontal, score, rack));
     // result. = '';
@@ -349,15 +349,19 @@ Solver.prototype.goOn = function(anchor, pos, l, result, rack, newArc, oldArc, f
     var movedAnchor = anchor.move(pos);
     log(space + 'goOn newArc ' + JSON.stringify(newArc) + ' oldArc: ' + JSON.stringify(oldArc));// + '\n' + space + JSON.stringify(this.arcState(newArc)));
     log(space + 'pos: ' + pos);
-    // log(space + 'l: ' + l);
+    log(space + 'l: ' + l);
     if (pos <= 0) {
         var leftPos = anchor.move(pos - 1);
         result = l + result;
+        log(space + 'result: ' + result);
+        log(space + 'letter on arc: ' + this.letterOnArc(oldArc, l.toUpperCase()));
+        log(space + 'empty left:' + this.grid.cellEmpty(leftPos.x, leftPos.y));
         if (this.letterOnArc(oldArc, l.toUpperCase()) &&
             this.grid.cellEmpty(leftPos.x, leftPos.y)) {
             this.recordPlay(result, anchor, pos, rack, firstWord);
         }
         if (newArc !== null) {
+            log(space + 'new arc and room left:' + this.grid.roomLeft(anchor, pos));
             if (this.grid.roomLeft(anchor, pos)) {
                 this.gen(anchor, pos - 1, result, rack, newArc, firstWord, space);
             }
@@ -374,21 +378,24 @@ Solver.prototype.goOn = function(anchor, pos, l, result, rack, newArc, oldArc, f
     } else if (pos > 0) {
         result += l;
         var rightPos = anchor.move(pos + 1);
-        if (this.arcChar(oldArc) !== null) {
-            log("@@@@@@@@@@@@@@@@@@");
-        }
-        log(space + 'oldChars: ' + this.arcChar(oldArc));
+        // if (this.arcChar(newArc) !== null) {
+        //     log("@@@@@@@@@@@@@@@@@@");
+        // }
+        log(space + 'newChars: ' + this.arcChar(newArc));
         if (this.letterOnArc(oldArc, l.toUpperCase())) {
-            log('LETTER IS ON ARC');
+            // log('LETTER IS ON ARC');
             if (this.grid.cellEmpty(rightPos.x, rightPos.y)) {
                 this.recordPlay(result, anchor, pos - result.length, rack, firstWord);
             }
-        } else if (this.letterOnArc(newArc, this.grid.lexicon.separator)) {
-            var sepArc = this.nextArc(newArc, this.grid.lexicon.separator);
-            log('Separator found moving right: ' + JSON.stringify(sepArc));
-            if (this.letterOnArc(sepArc, l.toUpperCase())) {
-                if (this.grid.cellEmpty(rightPos.x, rightPos.y)) {
-                    this.recordPlay(result, anchor, pos - result.length, rack, firstWord);
+        } else {
+            var sepArc = this.nextArc(oldArc, this.grid.lexicon.separator);
+            log(space + 'LETTER NOT ON ARC TRY SEP: ' + this.grid.lexicon.separator + ' ' + sepArc);
+            if (sepArc) {
+                // log('Separator found moving right: ' + JSON.stringify(sepArc));
+                if (this.letterOnArc(sepArc, l.toUpperCase())) {
+                    if (this.grid.cellEmpty(rightPos.x, rightPos.y)) {
+                        this.recordPlay(result, anchor, anchor.x + pos - result.length - 1, rack, firstWord);
+                    }
                 }
             }
         }

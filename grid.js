@@ -62,7 +62,7 @@ Grid.prototype.wordH = function(col, row, word) {
     }, that);
     var start = row * this.size + Math.max(col - 1, 0);
     var end = row * this.size + Math.min(this.size, col + word.length + 1);
-    log(start + ' ' + end);
+    // log(start + ' ' + end);
     this.anchors.fill(1, start, end);
 
     var row1 = Math.max(row - 1, 0) * this.size;
@@ -136,14 +136,20 @@ Grid.prototype.roomRight = function(anchor, pos) {
 }
 
 Grid.prototype.fits = function(col, row, horizontal, word) {
-	if (col < 0 || row < 0)
+	if (col < 0 || row < 0) {
+		// log('off start of board');
 		return false;
+	}
 	if (horizontal) {
-		if (col + word.length > this.size)
+		if (col + word.length > this.size) {
+			// log('off end of board');
 			return false;
+		}
 	} else {
-		if (row + word.length > this.size)
+		if (row + word.length > this.size) {
+			// log('ff end of board');
 			return false;
+		}
 	}
 
 	var result = !word.split('').some(function (letter) {
@@ -159,6 +165,7 @@ Grid.prototype.fits = function(col, row, horizontal, word) {
 		if (rawCell != letter && cell == ansiTrim(rawCell))
 		{
 			// Doesn't match letter already on board
+			// log('doesn\'t match letter on board');
 			return true;
 		}
 		// Blank or matches previous piece
@@ -182,9 +189,9 @@ Grid.prototype.cell = function(col, row) {
 	}
     var i = row * this.size + col;
     var val = this[i];
-    if (val === null || val === undefined) {
-    	log('called with ' + col + ', ' + row);
-    }
+    // if (val === null || val === undefined) {
+    // 	log('called with ' + col + ', ' + row);
+    // }
     return ansiTrim(val);
 }
 
@@ -356,8 +363,11 @@ Validate the “main” word and calculate the score appropriately.
 
  **/
 Grid.prototype.validateMove = function(word, col, row, horizontal, firstWord, rackUsed) {
-    if (!this.fits(col, row, horizontal, word))
+	// log('validating word ' + word);
+    if (!this.fits(col, row, horizontal, word)) {
+    	// log('Doesn\'t fit');
         return -1;
+    }
     var totalScore = 0;
     var totalAltScore = 0;
     var totalWordMultiplier = 1;
@@ -367,12 +377,12 @@ Grid.prototype.validateMove = function(word, col, row, horizontal, firstWord, ra
     var middleColRow = Math.floor(this.size / 2);
     var letterPlaced = false;
 
-    // if (!this.beforeEmpty(col, row, horizontal)) {
-    //     return -1;
-    // }
-    // if (!this.afterEmpty(word, col, row, horizontal)) {
-    //     return -1;
-    // }
+    if (!this.beforeEmpty(col, row, horizontal)) {
+        return -1;
+    }
+    if (!this.afterEmpty(word, col, row, horizontal)) {
+        return -1;
+    }
 
     var failed = word.split('').some(function(letter, i) {
         var cellCol = horizontal?col+i:col;
@@ -403,17 +413,17 @@ Grid.prototype.validateMove = function(word, col, row, horizontal, firstWord, ra
         	// log(cellCol + ', ' + cellRow + ' ' + horizontal);
             var prefix = this.prefix(cellCol, cellRow, !horizontal);
             var suffix = this.suffix(cellCol, cellRow, !horizontal);
-            // log('p ' + prefix + ' s ' + suffix);
+            log('p ' + prefix + ' s ' + suffix);
             var altWord = prefix + letter + suffix;
             if (altWord.length > 1) {
 
-                // log('alt word: ' + altWord);
+                log('alt word: ' + altWord);
 	            if (this.lexicon.findWord(altWord.toUpperCase())) {
 	            	altScore = this.scoreWord(prefix) + this.scoreWord(suffix) + (letterScore * letterMultiplier);
 	            	altScore *= wordMultiplier;
                     foundAltWord =  true;
 	            } else {
-	            	// log("FAIL THIS WORD BECAUSE ALT WORD " + altWord + " DOESN'T EXIST");
+	            	log("FAIL THIS WORD BECAUSE ALT WORD " + altWord + " DOESN'T EXIST");
                     return true;
                 }
 	        }
@@ -428,24 +438,24 @@ Grid.prototype.validateMove = function(word, col, row, horizontal, firstWord, ra
     }, this);
 
     if (failed) {
-        // log('failed');
+        log('failed');
         return -1;
     }
 
     if (!letterPlaced) {
-        // log('!letterPlaced');
+        log('!letterPlaced');
     	return -1;
     }
 
     if (firstWord) {
         if (!foundMiddle) {
-            // log("not through middle")
+            log("not through middle")
             return -1;
         }
     } else {
         if (!foundAltWord && !foundHook)
         {
-            // log("not alt word or not hook")
+            log("not alt word and not hook")
             return -1;
         }
     }
