@@ -77,6 +77,59 @@ describe('Gordon', function() {
 
 
 		});
+
+		it('find only added words', function() {
+			var g = new Gordon();
+			g.addWord('CARE');
+			g.addWord('CARD');
+			g.addWord('CARED');
+			g.addWord('RACE');
+			g.addWord('DARE');
+			g.addWord('DID');
+			g.addWord('OPIATE');
+			g.addWord('OPIATED');
+			g.addWord('RINGER');
+			g.addWord('OR');
+			g.addWord('PI');
+			g.addWord('IN');
+			g.addWord('AG');
+			// g.addWord('TE');
+			g.addWord('ER');
+			g.addWord('BET');
+			g.addWord('ETHER');
+			g.addWord('TERM');
+			log(g.toDot());
+			var allWords = g.allWords();
+			log(allWords);
+			allWords.should.have.length(17);
+
+			//g.findWord('ERAC').should.not.be.ok;
+			// g.findWord('CARD').should.be.ok;
+			// g.findWord('CARED').should.be.ok;
+			// g.findWord('CARES').should.not.be.ok;
+			// g.findWord('CAR').should.not.be.ok;
+			// g.findWord('CA').should.not.be.ok;
+			// g.findWord('C').should.not.be.ok;
+			// g.findWord('CE').should.not.be.ok;
+
+
+		});
+
+		it.only('test branching', function() {
+			var g = new Gordon();
+			g.addAll('ALL,BALL'.split(','));
+			log(g.toDot());
+			log(g.allWords());
+			g.findWord('ALBL').should.not.be.ok;
+		});
+
+		it('test careen', function() {
+			var g = new Gordon();
+			g.addAll('CAREEN'.split(','));
+			log(g.toDot());
+			log(g.allWords());
+			g.findWord('CAREEN').should.not.be.ok;
+		});
 	});
 
 });

@@ -164,7 +164,7 @@ describe('Solver', function() {
 			// solver.grid.print();
 		});
 
-		it.only('should not find ringer', function() {
+		it('should not find ringer', function() {
 // 8C OPIATE 22,
 // I6 DID 16,
 // 9C RINGER 26
@@ -173,6 +173,17 @@ describe('Solver', function() {
 			solver.lexicon.addWord('OPIATE');
 			solver.lexicon.addWord('OPIATED');
 			solver.lexicon.addWord('RINGER');
+			solver.lexicon.addWord('OR');
+			solver.lexicon.addWord('PI');
+			solver.lexicon.addWord('IN');
+			solver.lexicon.addWord('AG');
+			// solver.lexicon.addWord('TE');
+			solver.lexicon.addWord('ER');
+			solver.lexicon.addWord('BET');
+			solver.lexicon.addWord('ETHER');
+			solver.lexicon.addWord('TERM');
+
+
 			solver.grid.lexicon = solver.lexicon;
 			// log(solver.lexicon.cs.join(','));
 			// log(solver.lexicon.toDot());
@@ -208,7 +219,13 @@ describe('Solver', function() {
 			var anchor = new A(2,8,true);
 		    solver.gen(anchor, 0, "", 'RINGER'.split(''), solver.lexicon.initialArc(), false);
 			log('Results: ' + JSON.stringify(solver.results, null, 2));
-			solver.results.should.have.length(0);
+			solver.results.should.have.length(1);
+			solver.results[0].word.should.be.equal('ER');
+			// if (solver.results.length > 0) {
+			// 	r = solver.results[0]
+			// 	solver.grid.addWord(r.word, r.col, r.row, r.horizontal);
+			// 	solver.grid.print();
+			// }
 			// solver.grid.addWord('RINGER', 5, 8, false);
 		});
 	});

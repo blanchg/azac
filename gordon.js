@@ -118,24 +118,29 @@ Gordon.prototype.addFinalArc = function(s, c1, c2) {
 	// log('Add char ' + c2 + ' to arc ' + JSON.stringify(arc));
 	arc.addLetter(c2);
 	// log('Arc ' +  JSON.stringify(arc) + ' char: ' + this.arcChar(arc));
+	return state;
 };
 
 Gordon.prototype.forceArc = function(s, ch, forceState) {
 
-	if (s[ch] === undefined)
-		s[ch] = new Arc(forceState.id);
-
-	if (s[ch].s !== forceState.id) {
-		// log("Can't force this s already exists");
-		// log('s: ' + JSON.stringify(s));
-		// log('c: ' + ch);
-		// log('force: ' + forceState);
+	if (s.hasOwnProperty(ch))
 		return;
-		// log('Force Arc: ' + ch);
-		// log('  s[ch].s ' + JSON.stringify(s[ch].s));
-		// log('  forceState ' + JSON.stringify(forceState));
-		// throw new Error("Can't force this s, a s already exists");
-	}
+
+	s[ch] = new Arc(forceState.id);
+
+// log('s[ch].s: ' + JSON.stringify(s[ch].s));
+// log('forceState.id: ' + JSON.stringify(forceState.id));
+// 	if (s[ch].s !== forceState.id) {
+// 		// log("Can't force this s already exists");
+// 		// log('s: ' + JSON.stringify(s));
+// 		// log('c: ' + ch);
+// 		// log('force: ' + forceState);
+// 		return;
+// 		// log('Force Arc: ' + ch);
+// 		// log('  s[ch].s ' + JSON.stringify(s[ch].s));
+// 		// log('  forceState ' + JSON.stringify(forceState));
+// 		// throw new Error("Can't force this s, a s already exists");
+// 	}
 
 };
 
@@ -146,33 +151,41 @@ Gordon.prototype.addWord = function(word) {
 	var initial = STATESETS[this.initial];
 	var st = initial;
 	var n = word.length - 1;
-	// log('initial s: ' + JSON.stringify(st));
+	// log('initial s: ' + st.id + " " + JSON.stringify(st));
 	// log("n: " + n);
 	// log("n -> 0");
 	for (var i = n; i >= 2; i--) {
-		// log(i + ": " + word[i]);
+		// log(i + " s: " + st.id + " -> " + word[i]);
 		st = this.addArc(st, word[i]);
+		// log(" --> " + st.id);
 	};
-	// log("1: " + word[1]);
-	// log("0: " + word[0]);
-	this.addFinalArc(st, word[1], word[0]);
+	// log("1" + " s: " + st.id + " -> " + word[1]);
+	// log("0" + " | " + word[0]);
+	st = this.addFinalArc(st, word[1], word[0]);
 
 	// log("n-1 -> 0 : n");
 	st = initial;
 	for (var i = n-1; i >= 0; i--) {
-		// log(i + ": " + word[i]);
+		// log(i + " s: " + st.id + " -> " + word[i]);
 		st = this.addArc(st, word[i]);
+		// log(" --> " + st.id);
 	};
-	// log(n + ": " + word[n]);
-	this.addFinalArc(st, this.separator, word[n]);
+	// log(n + " s: " + st.id + " -> " + word[n]);
+	st = this.addFinalArc(st, this.separator, word[n]);
 
+	// log('remaining paths');
 	for (var m = n - 2; m >= 0; m--) {
 		var forceSt = st;
 		var st = initial;
 		for (var i = m; i >= 0; i--) {
+			// log(i + " s: " + st.id + " -> " + word[i]);
 			st = this.addArc(st, word[i]);
+			// log(" --> " + st.id);
 		};
+		// log("s: " + st.id + " -> >");
 		st = this.addArc(st, '>');
+		// log(" --> " + st.id);
+		// log("force: " + st.id + " -> " + word[m+1] + " -> " + forceSt.id);
 		this.forceArc(st, word[m+1], forceSt);
 	};
 };
@@ -241,10 +254,13 @@ Gordon.prototype.findWord = function(word) {
 	var found = false;
 	var failed = word.split('').some(function(letter,i) {
 
-		var end = i == word.length - 1;
-		var second = i == 1;
-		// log('letter: ' + letter + ' end ' + end + ' second ' + second + ' arc ' + JSON.stringify(arc));
-		if (end) {
+		var endLetter = i == word.length - 1;
+		var secondLetter = i == 1;
+		if (secondLetter) {
+			arc = this.nextArc(arc, this.separator);
+		}
+		// log('letter: ' + letter + ' end ' + endLetter + ' second ' + secondLetter + ' arc ' + JSON.stringify(arc) + ' state ' + JSON.stringify(this.arcState(arc)));
+		if (endLetter) {
 			var separatorArc = this.nextArc(arc, this.separator);
 			if (this.letterOnArc(arc, letter) || this.letterOnArc(separatorArc, letter)) {
 				found = true;
@@ -253,15 +269,11 @@ Gordon.prototype.findWord = function(word) {
 			return false;
 		} else {
 			var letterArc;
-			if (second) {
-				letterArc = this.nextArc(this.nextArc(arc, this.separator), letter);
-			} else {
-				letterArc = this.nextArc(arc, letter);
-				if (letterArc === null) {
-					letterArc = this.nextArc(arc, this.separator);
-					if (letterArc !== null) {
-						letterArc = this.nextArc(letterArc, letter);
-					}
+			letterArc = this.nextArc(arc, letter);
+			if (letterArc === null && !secondLetter) {
+				letterArc = this.nextArc(arc, this.separator);
+				if (letterArc !== null) {
+					letterArc = this.nextArc(letterArc, letter);
 				}
 			}
 			if (letterArc === null) {
@@ -272,6 +284,45 @@ Gordon.prototype.findWord = function(word) {
 		}
 	}, this);
 	return found;
+};
+
+Gordon.prototype.allWords = function() {
+	var results = [];
+	this.loop(this.initialArc(), "", results, true);
+	return results;
+}
+
+Gordon.prototype.pushUnique = function(arr, obj) {
+	if (arr.indexOf(obj) === -1)
+		arr.push(obj);
+};
+
+Gordon.prototype.loop = function(arc, word, results, reverse) {
+	if (arc === null)
+		return;
+
+	var letters = this.arcChar(arc);
+	if (letters !== null) {
+		letters.split('').forEach(function(letter) {
+			if (reverse) {
+				this.pushUnique(results, letter + word);
+			} else {
+				this.pushUnique(results, word + letter);
+			}
+		}, this);
+	}
+	state = this.arcState(arc);
+	for (var stateLetter in state) {
+		if (stateLetter === '>') {
+			this.loop(this.nextArc(arc, stateLetter), word, results, false);
+		} else {
+			if (reverse) {
+				this.loop(this.nextArc(arc, stateLetter), stateLetter + word, results, reverse);
+			} else {
+				this.loop(this.nextArc(arc, stateLetter), word + stateLetter, results, reverse);
+			}
+		}
+	}
 };
 
 module.exports = Gordon;

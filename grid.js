@@ -413,23 +413,23 @@ Grid.prototype.validateMove = function(word, col, row, horizontal, firstWord, ra
         	// log(cellCol + ', ' + cellRow + ' ' + horizontal);
             var prefix = this.prefix(cellCol, cellRow, !horizontal);
             var suffix = this.suffix(cellCol, cellRow, !horizontal);
-            log('p ' + prefix + ' s ' + suffix);
+            // log('p ' + prefix + ' s ' + suffix);
             var altWord = prefix + letter + suffix;
             if (altWord.length > 1) {
 
-                log('alt word: ' + altWord);
+                // log('alt word: ' + altWord);
 	            if (this.lexicon.findWord(altWord.toUpperCase())) {
 	            	altScore = this.scoreWord(prefix) + this.scoreWord(suffix) + (letterScore * letterMultiplier);
 	            	altScore *= wordMultiplier;
                     foundAltWord =  true;
 	            } else {
-	            	log("FAIL THIS WORD BECAUSE ALT WORD " + altWord + " DOESN'T EXIST");
+	            	// log("FAIL THIS WORD BECAUSE ALT WORD " + altWord + " DOESN'T EXIST");
                     return true;
                 }
 	        }
 		}
 
-        log(rawCell + ' ' + letter + ' ' + letterScore + ' * ' + letterMultiplier + ' = ' + (letterScore * letterMultiplier + altScore) + ' (' + altScore + ')');
+        // log(rawCell + ' ' + letter + ' ' + letterScore + ' * ' + letterMultiplier + ' = ' + (letterScore * letterMultiplier + altScore) + ' (' + altScore + ')');
         totalScore += letterScore * letterMultiplier;
         totalAltScore += altScore;
         totalWordMultiplier = totalWordMultiplier * wordMultiplier;
@@ -438,24 +438,24 @@ Grid.prototype.validateMove = function(word, col, row, horizontal, firstWord, ra
     }, this);
 
     if (failed) {
-        log('failed');
+        // log('failed');
         return -1;
     }
 
     if (!letterPlaced) {
-        log('!letterPlaced');
+        // log('!letterPlaced');
     	return -1;
     }
 
     if (firstWord) {
         if (!foundMiddle) {
-            log("not through middle")
+            // log("not through middle")
             return -1;
         }
     } else {
         if (!foundAltWord && !foundHook)
         {
-            log("not alt word and not hook")
+            // log("not alt word and not hook")
             return -1;
         }
     }
