@@ -151,41 +151,41 @@ Gordon.prototype.addWord = function(word) {
 	var initial = STATESETS[this.initial];
 	var st = initial;
 	var n = word.length - 1;
-	// log('initial s: ' + st.id + " " + JSON.stringify(st));
-	// log("n: " + n);
-	// log("n -> 0");
+	log('initial s: ' + st.id + " " + JSON.stringify(st));
+	log("n: " + n);
+	log("n -> 0");
 	for (var i = n; i >= 2; i--) {
-		// log(i + " s: " + st.id + " -> " + word[i]);
+		log(i + " s: " + st.id + " -> " + word[i]);
 		st = this.addArc(st, word[i]);
-		// log(" --> " + st.id);
+		log(" --> " + st.id);
 	};
-	// log("1" + " s: " + st.id + " -> " + word[1]);
-	// log("0" + " | " + word[0]);
-	st = this.addFinalArc(st, word[1], word[0]);
+	log("1" + " s: " + st.id + " -> " + word[1]);
+	log("0" + " | " + word[0]);
+	this.addFinalArc(st, word[1], word[0]);
 
-	// log("n-1 -> 0 : n");
+	log("n-1 -> 0 : n");
 	st = initial;
 	for (var i = n-1; i >= 0; i--) {
-		// log(i + " s: " + st.id + " -> " + word[i]);
+		log(i + " s: " + st.id + " -> " + word[i]);
 		st = this.addArc(st, word[i]);
-		// log(" --> " + st.id);
+		log(" --> " + st.id);
 	};
-	// log(n + " s: " + st.id + " -> " + word[n]);
-	st = this.addFinalArc(st, this.separator, word[n]);
+	log(n + " s: " + st.id + " -> " + word[n]);
+	this.addFinalArc(st, this.separator, word[n]);
 
-	// log('remaining paths');
+	log('remaining paths');
 	for (var m = n - 2; m >= 0; m--) {
 		var forceSt = st;
 		var st = initial;
 		for (var i = m; i >= 0; i--) {
-			// log(i + " s: " + st.id + " -> " + word[i]);
+			log(i + " s: " + st.id + " -> " + word[i]);
 			st = this.addArc(st, word[i]);
-			// log(" --> " + st.id);
+			log(" --> " + st.id);
 		};
-		// log("s: " + st.id + " -> >");
+		log("s: " + st.id + " -> >");
 		st = this.addArc(st, '>');
-		// log(" --> " + st.id);
-		// log("force: " + st.id + " -> " + word[m+1] + " -> " + forceSt.id);
+		log(" --> " + st.id);
+		log("force: " + st.id + " -> " + word[m+1] + " -> " + forceSt.id);
 		this.forceArc(st, word[m+1], forceSt);
 	};
 };
@@ -288,16 +288,18 @@ Gordon.prototype.findWord = function(word) {
 
 Gordon.prototype.allWords = function() {
 	var results = [];
-	this.loop(this.initialArc(), "", results, true);
+
+	var initial = STATESETS[this.initial];
+	for (var stateLetter in initial) {
+		var arc = initial[stateLetter];
+		this.getFinalWords(arc, stateLetter, results, true);
+		var nextArc = this.nextArc(arc, this.separator);
+		this.loop(nextArc, stateLetter, results);
+	}
 	return results;
 }
 
-Gordon.prototype.pushUnique = function(arr, obj) {
-	if (arr.indexOf(obj) === -1)
-		arr.push(obj);
-};
-
-Gordon.prototype.loop = function(arc, word, results, reverse) {
+Gordon.prototype.getFinalWords = function(arc, word, results, reverse) {
 	if (arc === null)
 		return;
 
@@ -311,16 +313,24 @@ Gordon.prototype.loop = function(arc, word, results, reverse) {
 			}
 		}, this);
 	}
+};
+
+Gordon.prototype.pushUnique = function(arr, obj) {
+	if (arr.indexOf(obj) === -1)
+		arr.push(obj);
+};
+
+Gordon.prototype.loop = function(arc, word, results) {
+	if (arc === null)
+		return;
+	
+	this.getFinalWords(arc, word, results, false);
 	state = this.arcState(arc);
 	for (var stateLetter in state) {
 		if (stateLetter === '>') {
-			this.loop(this.nextArc(arc, stateLetter), word, results, false);
+			this.loop(this.nextArc(arc, stateLetter), word, results);
 		} else {
-			if (reverse) {
-				this.loop(this.nextArc(arc, stateLetter), stateLetter + word, results, reverse);
-			} else {
-				this.loop(this.nextArc(arc, stateLetter), word + stateLetter, results, reverse);
-			}
+			this.loop(this.nextArc(arc, stateLetter), word + stateLetter, results);
 		}
 	}
 };

@@ -262,9 +262,9 @@ Solver.prototype.allowedHere = function(anchor, pos, letter) {
     var altWord = prefix + letter + suffix;
     if (altWord.length > 1) {
         var result = this.grid.lexicon.findWord(altWord.toUpperCase());
-        // if (!result) {
-        //     log('alt word: ' + altWord + ' doesn\'t exist');
-        // }
+        if (!result) {
+            log('alt word: ' + altWord + ' doesn\'t exist');
+        }
         // if (result) {
         //     log(p.x + ', ' + p.y + ' ' + p.horizontal);
         //     log('p ' + prefix + ' s ' + suffix);
@@ -328,7 +328,7 @@ Solver.prototype.gen = function(anchor, pos, result, rack, arc, firstWord, space
 };
 
 Solver.prototype.recordPlay = function(word, anchor, pos, rack, firstWord) {
-    // log('Record: ' + word + ' anchor: ' + JSON.stringify(anchor) + ' pos ' + pos);
+    log('Record: ' + word + ' anchor: ' + JSON.stringify(anchor) + ' pos ' + pos);
     var p = anchor.move(pos);
     var key = word + (p.x + (p.y * this.grid.size)) + (p.horizontal?'h':'v');
     if (this.wordDict[key] !== undefined) {

@@ -228,6 +228,41 @@ describe('Solver', function() {
 			// }
 			// solver.grid.addWord('RINGER', 5, 8, false);
 		});
+
+		it('should find relents', function() {
+			solver.lexicon = new Gordon();
+			solver.lexicon.addWord('AB');
+			solver.lexicon.addWord('ABS');
+			// solver.lexicon.addWord('NUMB');
+			// solver.lexicon.addWord('NUMBS');
+			// solver.lexicon.addWord('RELENTS');
+			log(solver.lexicon.allWords());
+			log(solver.lexicon.toDot());
+
+			solver.grid.lexicon = solver.lexicon;
+			var A = Solver.prototype.Anchor;
+			var anchor = new A(7,7,true);
+			solver.results = [];
+			solver.wordDict = {};
+		    solver.gen(anchor, 0, "", 'BMLUNNR'.split(''), solver.lexicon.initialArc(), true);
+			solver.results.should.have.length(1);
+			var r = solver.results[0]
+			solver.grid.addWord(r.word, r.col, r.row, r.horizontal);
+			solver.grid.print();
+
+			log('second');
+			// SECOND WORD
+			solver.results = [];
+			solver.wordDict = {};
+			var anchor = new A(8, 7,false);
+		    solver.gen(anchor, 0, "", 'LNRESET'.split(''), solver.lexicon.initialArc(), false);
+			// log('Results: ' + JSON.stringify(solver.results, null, 2));
+			solver.results.should.have.length(1);
+			r = solver.results[0]
+			solver.grid.addWord(r.word, r.col, r.row, r.horizontal);
+			solver.grid.print();
+
+		});
 	});
 
 });

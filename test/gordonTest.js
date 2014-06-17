@@ -128,7 +128,7 @@ describe('Gordon', function() {
 			g.addAll('CAREEN'.split(','));
 			log(g.toDot());
 			log(g.allWords());
-			g.findWord('CAREEN').should.not.be.ok;
+			g.findWord('CAREEN').should.be.ok;
 		});
 	});
 

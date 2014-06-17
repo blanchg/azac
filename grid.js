@@ -449,13 +449,13 @@ Grid.prototype.validateMove = function(word, col, row, horizontal, firstWord, ra
 
     if (firstWord) {
         if (!foundMiddle) {
-            // log("not through middle")
+            log("not through middle")
             return -1;
         }
     } else {
         if (!foundAltWord && !foundHook)
         {
-            // log("not alt word and not hook")
+            log("not alt word and not hook")
             return -1;
         }
     }
