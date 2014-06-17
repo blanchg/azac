@@ -117,7 +117,7 @@ describe('Gordon', function() {
 
 		it.only('test branching', function() {
 			var g = new Gordon();
-			g.addAll('ALL,BALL'.split(','));
+			g.addAll('ALL,BALL,CALL'.split(','));
 			log(g.toDot());
 			log(g.allWords());
 			g.findWord('ALBL').should.not.be.ok;
@@ -130,6 +130,16 @@ describe('Gordon', function() {
 			log(g.allWords());
 			g.findWord('CAREEN').should.be.ok;
 		});
+
+		// it.only('should be compressed', function() {
+		// 	var g = new Gordon();
+		// 	g.addWord("ALL");
+		// 	g.addWord("BALL");
+		// 	g.addWord("CALL");
+		// 	// g.addWord("CARE");
+		// 	log(g.toDot());
+		// 	g.findWord('ALBL').should.not.be.ok;
+		// });
 	});
 
 });

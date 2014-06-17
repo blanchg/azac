@@ -66,7 +66,7 @@ State.prototype.toDot = function(dict) {
 			dict[this.id +':' + s.id] = true;
 		}
 	}
-	result = this.id + '[label="' + this.id + '"];\n' + result;
+	// result = this.id + '[label="' + this.id + '"];\n' + result;
 	return result;
 }
 Object.defineProperty(State.prototype, 'toDot', {enumerable:false});
@@ -141,7 +141,6 @@ Gordon.prototype.forceArc = function(s, ch, forceState) {
 // 		// log('  forceState ' + JSON.stringify(forceState));
 // 		// throw new Error("Can't force this s, a s already exists");
 // 	}
-
 };
 
 Gordon.prototype.addWord = function(word) {
@@ -187,6 +186,7 @@ Gordon.prototype.addWord = function(word) {
 		log(" --> " + st.id);
 		log("force: " + st.id + " -> " + word[m+1] + " -> " + forceSt.id);
 		this.forceArc(st, word[m+1], forceSt);
+		// this.addFinalArc(st, word[m+1], word[m+2]);
 	};
 };
 
