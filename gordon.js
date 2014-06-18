@@ -154,38 +154,39 @@ Gordon.prototype.addWord = function(word) {
 	log("n: " + n);
 	log("n -> 0");
 	for (var i = n; i >= 2; i--) {
-		log(i + " s: " + st.id + " -> " + word[i]);
+		var id = st.id;
 		st = this.addArc(st, word[i]);
-		log(" --> " + st.id);
-	};
-	log("1" + " s: " + st.id + " -> " + word[1]);
-	log("0" + " | " + word[0]);
-	this.addFinalArc(st, word[1], word[0]);
+		log(i + " s: " + id + " -> " + word[i] + " -> " + st.id);
+	};	
+	var f = this.addFinalArc(st, word[1], word[0]);
+	log(n + " s: " + st.id + " -> " + word[1] + "|" + word[0] + " -> " + f.id);
 
 	log("n-1 -> 0 : n");
 	st = initial;
 	for (var i = n-1; i >= 0; i--) {
-		log(i + " s: " + st.id + " -> " + word[i]);
+		var id = st.id;
 		st = this.addArc(st, word[i]);
-		log(" --> " + st.id);
+		log(i + " s: " + id + " -> " + word[i] + " -> " + st.id);
 	};
-	log(n + " s: " + st.id + " -> " + word[n]);
-	this.addFinalArc(st, this.separator, word[n]);
+	f = this.addFinalArc(st, this.separator, word[n]);
+
+	log(n + " s: " + st.id + " -> " + this.separator + "|" + word[n] + " -> " + f.id);
+
 
 	log('remaining paths');
 	for (var m = n - 2; m >= 0; m--) {
 		var forceSt = st;
 		var st = initial;
 		for (var i = m; i >= 0; i--) {
-			log(i + " s: " + st.id + " -> " + word[i]);
+			var id = st.id;
 			st = this.addArc(st, word[i]);
-			log(" --> " + st.id);
+			log(i + " s: " + id + " -> " + word[i] + " -> " + st.id);
 		};
-		log("s: " + st.id + " -> >");
-		st = this.addArc(st, '>');
-		log(" --> " + st.id);
-		log("force: " + st.id + " -> " + word[m+1] + " -> " + forceSt.id);
+		var id = st.id;
+		st = this.addArc(st, this.separator);
+		log(m + " s: " + id + " -> > -> " + st.id);
 		this.forceArc(st, word[m+1], forceSt);
+		log(m + " f: " + st.id + " -> " + word[m+1] + " -> " + forceSt.id);
 		// this.addFinalArc(st, word[m+1], word[m+2]);
 	};
 };
