@@ -61,7 +61,7 @@ State.prototype.toDot = function(dict) {
 		var s = STATESETS[arc.s];
 		// log('astate ' + arc.s + ' s ' + s);
 		if (dict[this.id +':' + s.id] === undefined) {
-			result += this.id + ' -> ' + s.id + '[label = " ' + key + (arc.cs !== undefined?'|' + CS[arc.cs]:'') + '"];\n';
+			result += this.id + '->' + s.id + '[label=" ' + key + (arc.cs !== undefined?'|' + CS[arc.cs]:'') + '"];\n';
 			result += s.toDot(dict);
 			dict[this.id +':' + s.id] = true;
 		}
@@ -144,7 +144,7 @@ Gordon.prototype.forceArc = function(s, ch, forceState) {
 };
 
 Gordon.prototype.addWord = function(word) {
-
+	log('Word: ' + word);
 	if (word.length < 2) return;
 
 	var initial = STATESETS[this.initial];
@@ -172,7 +172,6 @@ Gordon.prototype.addWord = function(word) {
 
 	log(n + " s: " + st.id + " -> " + this.separator + "|" + word[n] + " -> " + f.id);
 
-
 	log('remaining paths');
 	for (var m = n - 2; m >= 0; m--) {
 		var forceSt = st;
@@ -185,9 +184,21 @@ Gordon.prototype.addWord = function(word) {
 		var id = st.id;
 		st = this.addArc(st, this.separator);
 		log(m + " s: " + id + " -> > -> " + st.id);
-		this.forceArc(st, word[m+1], forceSt);
-		log(m + " f: " + st.id + " -> " + word[m+1] + " -> " + forceSt.id);
-		// this.addFinalArc(st, word[m+1], word[m+2]);
+		for (var i = m + 1; i < n-1; i++) {
+			var id = st.id;
+			st = this.addArc(st, word[i]);
+			log(i + " +: " + id + " -> " + word[i] + " -> " + st.id);
+		}
+		f = this.addFinalArc(st, word[n-1], word[n]);
+		log((n - 1)+ " f: " + st.id + " -> " + word[n-1] + " | " + word[n] + " -> " + f.id);
+		// if (m < n - 2) {
+		// 	this.forceArc(st, word[m+1], forceSt);
+		// 	log(m + " a: " + st.id + " -> " + word[m+1] + " -> " + forceSt.id);
+		// } else {
+		// 	f = this.addFinalArc(st, word[m+1], word[m+2]);
+		// 	log((m + 1)+ " f: " + st.id + " -> " + word[m+1] + " | " + word[m+2] + " -> " + f.id);
+		// 	// st = f;
+		// }
 	};
 };
 
@@ -253,16 +264,21 @@ Gordon.prototype.findWord = function(word) {
 	if (!arc)
 		return false;
 	var found = false;
+	var reverse = true;
 	var failed = word.split('').some(function(letter,i) {
 
 		var endLetter = i == word.length - 1;
 		var secondLetter = i == 1;
 		if (secondLetter) {
 			arc = this.nextArc(arc, this.separator);
+			reverse = false;
 		}
 		// log('letter: ' + letter + ' end ' + endLetter + ' second ' + secondLetter + ' arc ' + JSON.stringify(arc) + ' state ' + JSON.stringify(this.arcState(arc)));
 		if (endLetter) {
 			var separatorArc = this.nextArc(arc, this.separator);
+			if (reverse && separatorArc !== null) {
+				return true;
+			}
 			if (this.letterOnArc(arc, letter) || this.letterOnArc(separatorArc, letter)) {
 				found = true;
 				return true;
@@ -328,8 +344,9 @@ Gordon.prototype.loop = function(arc, word, results) {
 	this.getFinalWords(arc, word, results, false);
 	state = this.arcState(arc);
 	for (var stateLetter in state) {
-		if (stateLetter === '>') {
+		if (stateLetter === this.separator) {
 			this.loop(this.nextArc(arc, stateLetter), word, results);
+			// return;
 		} else {
 			this.loop(this.nextArc(arc, stateLetter), word + stateLetter, results);
 		}

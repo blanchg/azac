@@ -7,6 +7,16 @@ var Gordon = require('../gordon.js');
 var should = require("should");
 
 var solver;
+
+var bestResult = function(results) {
+	var best = {score:0};
+	results.forEach(function(result) {
+		if (best.score < result.score)  {
+			best = result;
+		}
+	}, this);
+	return best;
+}
 describe('Solver', function() {
 
 	beforeEach(function() {
@@ -113,12 +123,13 @@ describe('Solver', function() {
 			var A = Solver.prototype.Anchor;
 
 			// FIRST WORD
-			var anchor = new A(2,7,true);
+			var anchor = new A(7,7,true);
 			solver.results = [];
 			solver.wordDict = {};
 		    solver.gen(anchor, 0, "", 'OPIATE'.split(''), solver.lexicon.initialArc(), true);
-			solver.results.should.have.length(1);
-			solver.grid.addWord('OPIATE', 2, 7, true);
+			solver.results.should.have.length(6);
+			r = bestResult(solver.results);
+			solver.grid.addWord(r.word, r.col, r.row, r.horizontal);
 
 			// SECOND WORD
 			solver.results = [];
@@ -147,21 +158,23 @@ describe('Solver', function() {
 			var A = Solver.prototype.Anchor;
 
 			// FIRST WORD
-			var anchor = new A(2,7,true);
+			var anchor = new A(7,7,true);
 			solver.results = [];
 			solver.wordDict = {};
 		    solver.gen(anchor, 0, "", 'OPIATE'.split(''), solver.lexicon.initialArc(), true);
-			solver.results.should.have.length(1);
-			solver.grid.addWord('OPIATE', 2, 7, true);
+			solver.results.should.have.length(6);
+			r = bestResult(solver.results);
+			r.score.should.be.equal(22);
+			solver.grid.addWord(r.word, r.col, r.row, r.horizontal);
+			solver.grid.print();
 
 			// SECOND WORD
 			solver.results = [];
 			solver.wordDict = {};
-			var anchor = new A(2,7,true);
+			var anchor = new A(1,7,true);
 		    solver.gen(anchor, 0, "", 'CROP'.split(''), solver.lexicon.initialArc(), false);
 			// log('Results: ' + JSON.stringify(solver.results, null, 2));
 			solver.results.should.have.length(1);
-			// solver.grid.print();
 		});
 
 		it('should not find ringer', function() {
@@ -207,8 +220,8 @@ describe('Solver', function() {
 			var anchor = new A(8, 7,false);
 		    solver.gen(anchor, 0, "", 'DID'.split(''), solver.lexicon.initialArc(), false);
 			// log('Results: ' + JSON.stringify(solver.results, null, 2));
-			solver.results.should.have.length(1);
-			r = solver.results[0]
+			solver.results.should.have.length(2);
+			r = bestResult(solver.results)
 			solver.grid.addWord(r.word, r.col, r.row, r.horizontal);
 			solver.grid.print();
 
@@ -231,11 +244,11 @@ describe('Solver', function() {
 
 		it('should find relents', function() {
 			solver.lexicon = new Gordon();
-			solver.lexicon.addWord('AB');
-			solver.lexicon.addWord('ABS');
-			// solver.lexicon.addWord('NUMB');
-			// solver.lexicon.addWord('NUMBS');
-			// solver.lexicon.addWord('RELENTS');
+			// solver.lexicon.addWord('AB');
+			// solver.lexicon.addWord('ABS');
+			solver.lexicon.addWord('NUMB');
+			solver.lexicon.addWord('NUMBS');
+			solver.lexicon.addWord('RELENTS');
 			log(solver.lexicon.allWords());
 			log(solver.lexicon.toDot());
 
@@ -245,8 +258,8 @@ describe('Solver', function() {
 			solver.results = [];
 			solver.wordDict = {};
 		    solver.gen(anchor, 0, "", 'BMLUNNR'.split(''), solver.lexicon.initialArc(), true);
-			solver.results.should.have.length(1);
-			var r = solver.results[0]
+			solver.results.should.have.length(4);
+			var r = bestResult(solver.results);
 			solver.grid.addWord(r.word, r.col, r.row, r.horizontal);
 			solver.grid.print();
 

@@ -438,12 +438,12 @@ Grid.prototype.validateMove = function(word, col, row, horizontal, firstWord, ra
     }, this);
 
     if (failed) {
-        // log('failed');
+        log('failed');
         return -1;
     }
 
     if (!letterPlaced) {
-        // log('!letterPlaced');
+        log('!letterPlaced');
     	return -1;
     }
 

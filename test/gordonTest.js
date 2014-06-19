@@ -47,7 +47,8 @@ describe('Gordon', function() {
 			g.addWord('CARE');
 			g.addWord('CARD');
 			g.addWord('CARED');
-			// log(g.toDot());
+			log(g.toDot());
+			log(g.allWords());
 			g.findWord('CARE').should.be.ok;
 			g.findWord('CARD').should.be.ok;
 			g.findWord('CARED').should.be.ok;
@@ -115,7 +116,7 @@ describe('Gordon', function() {
 
 		});
 
-		it.only('test branching', function() {
+		it('test branching', function() {
 			var g = new Gordon();
 			g.addAll('ALL,BALL,CALL'.split(','));
 			log(g.toDot());
