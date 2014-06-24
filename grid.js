@@ -54,8 +54,15 @@ Grid.prototype.constructor = Grid;
 
 
 Grid.prototype.wordH = function(col, row, word) {
+
+    if (row < 0 || row >= this.size)
+        return;
+    if (col < 0 || col+word.length > this.size)
+        return;
+
     var i = row * this.size + col;
     var that = this;
+
     word.split('').forEach(function (letter) {
         // log("Have that: " + this);
         this[i++] = letter;
@@ -65,14 +72,21 @@ Grid.prototype.wordH = function(col, row, word) {
     // log(start + ' ' + end);
     this.anchors.fill(1, start, end);
 
-    var row1 = Math.max(row - 1, 0) * this.size;
-    start = row1 + col;
-    end = start + word.length;
-    this.anchors.fill(1, start, end);
 
-    start = Math.min(row + 1, this.size) * this.size + col;
-    end = Math.min(row + 1, this.size) * this.size + col + word.length;
-    this.anchors.fill(1, start, end);
+    var row1;
+    if (row > 0) {
+        row1 = Math.max(row - 1, 0) * this.size;
+        start = row1 + col;
+        end = Math.min(row1 + this.size, start + word.length);
+        this.anchors.fill(1, start, end);
+    }
+
+    if (row < this.size) {
+        row1 = Math.min(row + 1, this.size - 1) * this.size;
+        start = row1 + col;
+        end = Math.min(row1 + this.size, start + word.length);
+        this.anchors.fill(1, start, end);
+    }
     // for (var x = start; x < end; x++) {
     // 	this.anchors[y * this.size]
     // };
@@ -81,6 +95,12 @@ Grid.prototype.wordH = function(col, row, word) {
 }
 
 Grid.prototype.wordV = function(col, row, word) {
+
+    if (row < 0 || row+word.length > this.size)
+        return;
+    if (col < 0 || col >= this.size)
+        return;
+
     var i = 0;
     var that = this;
     word.split('').forEach(function (letter) {
@@ -95,19 +115,24 @@ Grid.prototype.wordV = function(col, row, word) {
     	this.anchors[y * this.size + col] = 1;
     };
 
-    var col1 = Math.max(col - 1, 0);
-    start = row;
-    end = row + word.length;
-    for (var y = start; y < end; y++) {
-    	this.anchors[y * this.size + col1] = 1;
-    };
+    var col1;
+    if (col > 0) {
+        col1 = Math.max(col - 1, 0);
+        start = row;
+        end = row + word.length;
+        for (var y = start; y < end; y++) {
+        	this.anchors[y * this.size + col1] = 1;
+        };
+    }
 
-    col1 = Math.min(col + 1, this.size);
-    start = row;
-    end = row + word.length;
-    for (var y = start; y < end; y++) {
-    	this.anchors[y * this.size + col1] = 1;
-    };
+    if (col < this.size) {
+        col1 = Math.min(col + 1, this.size);
+        start = row;
+        end = row + word.length;
+        for (var y = start; y < end; y++) {
+        	this.anchors[y * this.size + col1] = 1;
+        };
+    }
 }
 
 Grid.prototype.addWord = function(word, col, row, horizontal) {
@@ -438,24 +463,24 @@ Grid.prototype.validateMove = function(word, col, row, horizontal, firstWord, ra
     }, this);
 
     if (failed) {
-        log('failed');
+        // log('failed');
         return -1;
     }
 
     if (!letterPlaced) {
-        log('!letterPlaced');
+        // log('!letterPlaced');
     	return -1;
     }
 
     if (firstWord) {
         if (!foundMiddle) {
-            log("not through middle")
+            // log("not through middle")
             return -1;
         }
     } else {
         if (!foundAltWord && !foundHook)
         {
-            log("not alt word and not hook")
+            // log("not alt word and not hook")
             return -1;
         }
     }

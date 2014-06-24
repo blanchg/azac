@@ -9,16 +9,21 @@ describe("Grid", function() {
  		grid = new Grid(15);
 	});
 
-	it("anchors horizontal", function() {
-		grid.addWord('ABC', 5, 7, true);
+	it.only("anchors horizontal", function() {
+		grid.addWord('OPIATE', 2, 7, true);
 		// console.log('Anchors: "' + grid.anchors.join('') + '"');
 		grid.printAnchors();
-		grid.anchors.filter(function(x) { return x == 1; }).should.have.length(11);
-
-		grid.addWord('ABC', 5, 6, true);
+		// grid.anchors.filter(function(x) { return x == 1; }).should.have.length(20);
+console.log('');
+		grid.addWord('OPIATE', 7, 2, false);
 		// console.log('Anchors: "' + grid.anchors.join('') + '"');
 		grid.printAnchors();
-		grid.anchors.filter(function(x) { return x == 1; }).should.have.length(16);
+		// grid.anchors.filter(function(x) { return x == 1; }).should.have.length(34);
+console.log('');
+		// grid.addWord('OPIATE', 7, 7, true);
+		grid.addWord('OPIATE', 14, 7, false);
+		// console.log('Anchors: "' + grid.anchors.join('') + '"');
+		grid.printAnchors();
 	});
 
 	it("anchors vertical", function() {

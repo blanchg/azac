@@ -119,9 +119,13 @@ describe('Gordon', function() {
 		it('test branching', function() {
 			var g = new Gordon();
 			g.addAll('ALL,BALL,CALL'.split(','));
+			// g.addWord('CALL');
 			log(g.toDot());
 			log(g.allWords());
 			g.findWord('ALBL').should.not.be.ok;
+			g.findWord('ALL').should.be.ok;
+			g.findWord('CALL').should.be.ok;
+			g.findWord('BALL').should.be.ok;
 		});
 
 		it('test careen', function() {
