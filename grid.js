@@ -6,15 +6,18 @@ var ALPHABET = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ'.split('');
 var LETTERSCORES = '1,3,3,2,1,4,2,4,1,8,5,1,3,1,1,3,10,1,1,1,1,4,4,8,4,10'.split(',').map(function(item){return parseInt(item)});
 
 function Grid(newSize) {
-    if (newSize.constructor == Grid) {
+    if (newSize.constructor === Grid) {
         this.size = newSize.size;
         this.length = newSize.length;
+        this.anchors = newSize.anchors.slice(0);
+        this.lexicon = newSize.lexicon;
         newSize.forEach(function(letter, index) {
             this[index] = letter;
         }, this);
     } else {
         this.size = newSize;
         this.length = this.size*this.size;
+        this.lexicon = null;
         this.fill(' ', 0, this.length);
         this.anchors = new Array(this.length);
         this.anchors.fill(0, 0, this.length);
@@ -44,7 +47,6 @@ function Grid(newSize) {
             }, this);
     }
 
-    this.lexicon = null;
 
 }
 

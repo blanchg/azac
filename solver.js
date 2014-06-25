@@ -409,11 +409,144 @@ Solver.prototype.goOn = function(anchor, pos, l, result, rack, newArc, oldArc, f
     }
 };
 
+
+
+var Query = function(rack, bag, grid, firstWord) {
+    this.rack = rack.slice(0);
+    this.bag = bag.slice(0);
+    this.grid = new Grid(grid);
+    this.firstWord = firstWord;
+}
+
+Solver.prototype.processQuery = function(query) {
+    this.rack = query.rack;
+    this.bag = query.bag;
+    this.grid = query.grid;
+    var firstWord = query.firstWord;
+
+    this.fillRack(this.rack, this.bag);
+    log('Starting Rack: ' + this.rack);
+    log('bag: ' + this.bag.join(''));
+    
+    var result = new Result(null, null, null, 0, 0, true, 0);
+
+    var anchors = this.getAnchors(firstWord);
+
+    this.results = [];
+    this.wordDict = {};
+    log('Found: ' + anchors.length + ' anchors');
+    anchors.forEach(function (anchor, i) {
+        // log(i);
+        this.gen(anchor, 0, "", this.rack.slice(0), this.grid.lexicon.initialArc(), firstWord);
+        // log(' ' + i);
+    }, this);
+
+    // this.results.sort();
+    // log("Results: " + this.results.join('\n'));
+    log("Found " + this.results.length + " words");
+    // this.results = this.results.unique();
+    // log("Found " + this.results.length + " unique words");
+
+    // this.results.forEach(function (r) {
+    //     log(' ' + r.word + ' = ' + r.score + ' ' + r.col + ',' + r.row + ' ' + r.horizontal);
+    //     if (r.score > result.score) {
+    //         result = r;
+    //     }
+    // }, this);
+    return this.results;
+}
+
+var SearchState = function(problem, grid, bag, rack, firstWord) {
+    this.finalScore = 0;
+    this.totalScore = 0;
+    this.foundWords =[];
+    this.firstWord = firstWord;
+    this.problem = problem;
+    this.grid = grid;
+    this.bag = bag;
+    this.rack = rack;
+}
+
 Solver.prototype.processAll = function() {
+    this.grid.print();
+    this.grid.lexicon = this.lexicon;
+
+    if (this.grid.lexicon.findWord('TE')) {
+        log('ERROR can find word TE!');
+        return;
+    }
+    if (this.grid.lexicon.findWord('EASOZ')) {
+        log('ERROR can find word EASOZ!');
+        return;
+    }
+
+    // var endStates = [];
+    var bestFinalState = new SearchState();
+    var searchState = new SearchState(this.problem, this.grid, this.bag, this.rack, true);
+    var states = [];
+    states.push(searchState);
+    while(states.length > 0) {
+        var state = states.pop();
+        var results = null;
+        var q = null;
+        if (state.bag.length > 0 || state.rack.length > 0)
+        {
+            q = new Query(state.rack, state.bag, state.grid, state.firstWord);
+            results = this.processQuery(q);
+        }
+
+        if (results === null || results.length === 0) {
+            if (state.finalScore == 0) {
+                this.grid = state.grid;
+                log("Remaining rack: " + state.rack);
+                log("Remaining bag: " + state.bag);
+                var bagScore = this.grid.scoreWord(state.bag.join(''));
+                var rackScore = this.grid.scoreWord(state.rack.join(''));
+                state.finalScore = (state.totalScore - bagScore - rackScore);
+                log("Total Score: " + state.totalScore  + 
+                    " bagScore: -" + bagScore + 
+                    " rackScore: -" + rackScore + 
+                    " Final Score: " + state.finalScore);
+
+                if (state.finalScore > bestFinalState.finalScore) {
+                    bestFinalState = state;
+                    this.saveProgress(state.grid, state.foundWords);
+                    state.grid.print();
+                    log('Result\n' + this.problem + ':\n' + state.foundWords.map(function(f) {return f.join(' ');}).join(',\n'));
+                }
+                // endStates.push(state);
+            }
+        } else {
+
+            results.forEach(function(result) {
+
+                log('From word: ' + result.word + ' ' + result.score);
+
+                if (result.word === null || result.word.length == 0)
+                {
+                    return true;
+                }
+
+                var newState = new SearchState(state.problem, new Grid(q.grid), q.bag, result.rack, false);
+                log("Next state: " + newState.rack + ' and bag ' + newState.bag);
+                newState.totalScore = state.totalScore + result.score;
+                newState.foundWords = state.foundWords.slice(0);
+                var position = this.ROWS[result.row] + this.COLUMNS[result.col];
+                if (!result.horizontal) {
+                    position = this.COLUMNS[result.col] + this.ROWS[result.row];
+                }
+                newState.foundWords.push([position, result.word, result.score]);
+                newState.grid.addWord(result.word, result.col, result.row, result.horizontal);
+                states.push(newState);
+                return true;
+            }, this);
+        }
+    }
+};
+
+Solver.prototype.processAllOld = function() {
 try {
     log('ready to process');
-
-
 
     var totalScore = 0;
     var foundWords = [];
@@ -465,55 +598,6 @@ try {
             }
         }, this);
         firstWord = false;
-        // log("Results: " + this.results.join('\n'));
-
-        // if (firstWord) {
-        //     col = 7;
-        //     for (row = 1; row < this.grid.size / 2; row++) {
-        //         this.processRack(col, row, this.rack, [], '', firstWord, false, result);
-        //     };
-        //     row = 7;
-        //     for (col = 1; col < this.grid.size / 2; col++) {
-        //         this.processRack(col, row, this.rack, [], '', firstWord, true, result);
-        //     }
-        //     firstWord = false;
-        // } else {
-        //     var hookRow;
-        //     var hookCol;
-        //     var hookLetters;
-        //     for (row = 0; row < this.grid.size; row++) {
-        //         for (col = 0; col < this.grid.size; col++) {
-        //             hookCol = col;
-        //             hookLetters = [];
-        //             for (hookRow = row; hookRow < this.grid.size; hookRow++) {
-        //                 var cell = this.grid.cell(hookCol, hookRow);
-        //                 var rawCell = this.grid.rawCell(hookCol, hookRow);
-        //                 if (cell != rawCell) {
-        //                     hookLetters.push('?');
-        //                 } else {
-        //                     hookLetters.push(rawCell);
-        //                 }
-        //             };
-        //             if (this.grid.beforeEmpty(col, row, false))
-        //                 this.processRack(col, row, this.rack.slice(0), [], hookLetters.join(''), firstWord, false, result);
-        //             hookRow = row;
-        //             hookLetters = [];
-        //             for (hookCol = col; hookCol < this.grid.size; hookCol++) {
-        //                 var cell = this.grid.cell(hookCol, hookRow);
-        //                 var rawCell = this.grid.rawCell(hookCol, hookRow);
-        //                 if (cell != rawCell) {
-        //                     hookLetters.push('?');
-        //                 } else {
-        //                     hookLetters.push(rawCell);
-        //                 }
-        //             };
-        //             if (this.grid.beforeEmpty(col, row, true))
-        //                 this.processRack(col, row, this.rack.slice(0), [], hookLetters.join(''), firstWord, true, result);
-        //         }
-        //     };
-        // }
-
-        
 
         log('word: ' + result.word);
         if (!result.word || result.word.length == 0)
