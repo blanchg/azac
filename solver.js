@@ -425,8 +425,8 @@ Solver.prototype.processQuery = function(query) {
     var firstWord = query.firstWord;
 
     this.fillRack(this.rack, this.bag);
-    log('Starting Rack: ' + this.rack);
-    log('bag: ' + this.bag.join(''));
+    // log('Starting Rack: ' + this.rack);
+    // log('bag: ' + this.bag.join(''));
     
     var result = new Result(null, null, null, 0, 0, true, 0);
 
@@ -434,16 +434,29 @@ Solver.prototype.processQuery = function(query) {
 
     this.results = [];
     this.wordDict = {};
-    log('Found: ' + anchors.length + ' anchors');
+    // log('Found: ' + anchors.length + ' anchors');
     anchors.forEach(function (anchor, i) {
         // log(i);
         this.gen(anchor, 0, "", this.rack.slice(0), this.grid.lexicon.initialArc(), firstWord);
         // log(' ' + i);
     }, this);
 
-    // this.results.sort();
+    this.results.sort(function(a,b){
+        if (a.score > b.score)
+            return 1;
+        else if (a.score < b.score)
+            return -1;
+        var al = a.word.length;
+        var bl = b.word.length;
+        if (al < bl)
+            return -1;
+        else if (al > bl)
+            return 1;
+
+        return 0;
+    });
     // log("Results: " + this.results.join('\n'));
-    log("Found " + this.results.length + " words");
+    // log("Found " + this.results.length + " words");
     // this.results = this.results.unique();
     // log("Found " + this.results.length + " unique words");
 
@@ -498,8 +511,8 @@ Solver.prototype.processAll = function() {
         if (results === null || results.length === 0) {
             if (state.finalScore == 0) {
                 this.grid = state.grid;
-                log("Remaining rack: " + state.rack);
-                log("Remaining bag: " + state.bag);
+                // log("Remaining rack: " + state.rack);
+                // log("Remaining bag: " + state.bag);
                 var bagScore = this.grid.scoreWord(state.bag.join(''));
                 var rackScore = this.grid.scoreWord(state.rack.join(''));
                 state.finalScore = (state.totalScore - bagScore - rackScore);
@@ -508,6 +521,7 @@ Solver.prototype.processAll = function() {
                     " rackScore: -" + rackScore + 
                     " Final Score: " + state.finalScore +
                     " / " + bestFinalState.finalScore);
+                log(state.foundWords.map(function(f) {return f[1]}).join(','));
 
                 if (state.finalScore > bestFinalState.finalScore) {
                     bestFinalState = state;
@@ -521,7 +535,7 @@ Solver.prototype.processAll = function() {
 
             results.forEach(function(result) {
 
-                log('From word: ' + result.word + ' ' + result.score);
+                // log('From word: ' + result.word + ' ' + result.score);
 
                 if (result.word === null || result.word.length == 0)
                 {
