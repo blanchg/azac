@@ -1,3 +1,4 @@
+require('look').start(5959);
 
 // var process = require('process');
 var log = require('./util.js').log;

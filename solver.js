@@ -418,6 +418,10 @@ var Query = function(rack, bag, grid, firstWord) {
     this.firstWord = firstWord;
 }
 
+// var Query2 = function() {
+//     this.rack = null
+// }
+
 Solver.prototype.processQuery = function(query) {
     this.rack = query.rack;
     this.bag = query.bag;
@@ -441,20 +445,20 @@ Solver.prototype.processQuery = function(query) {
         // log(' ' + i);
     }, this);
 
-    this.results.sort(function(a,b){
-        if (a.score > b.score)
-            return 1;
-        else if (a.score < b.score)
-            return -1;
-        var al = a.word.length;
-        var bl = b.word.length;
-        if (al < bl)
-            return -1;
-        else if (al > bl)
-            return 1;
+    // this.results.sort(function(a,b){
+    //     if (a.score > b.score)
+    //         return 1;
+    //     else if (a.score < b.score)
+    //         return -1;
+    //     var al = a.word.length;
+    //     var bl = b.word.length;
+    //     if (al < bl)
+    //         return -1;
+    //     else if (al > bl)
+    //         return 1;
 
-        return 0;
-    });
+    //     return 0;
+    // });
     // log("Results: " + this.results.join('\n'));
     // log("Found " + this.results.length + " words");
     // this.results = this.results.unique();
@@ -480,6 +484,85 @@ var SearchState = function(problem, grid, bag, rack, firstWord) {
     this.rack = rack;
 }
 
+Solver.prototype.processState = function(states, bestFinalState, i) {
+    var state = states.pop();
+    var results = null;
+    var q = null;
+    if (state.bag.length > 0 || state.rack.length > 0)
+    {
+        q = new Query(state.rack, state.bag, state.grid, state.firstWord);
+        results = this.processQuery(q);
+    }
+    i++;
+
+    if (results === null || results.length === 0) {
+        if (state.finalScore == 0) {
+            this.grid = state.grid;
+            // log("Remaining rack: " + state.rack);
+            // log("Remaining bag: " + state.bag);
+            var bagScore = this.grid.scoreWord(state.bag.join(''));
+            var rackScore = this.grid.scoreWord(state.rack.join(''));
+            state.finalScore = (state.totalScore - bagScore - rackScore);
+
+            if (i > 100) {
+                log("Total Score: " + state.totalScore  + 
+                    " bagScore: -" + bagScore + 
+                    " rackScore: -" + rackScore + 
+                    " Final Score: " + state.finalScore +
+                    " / " + bestFinalState.finalScore);
+                log(state.foundWords.map(function(f) {return f[1]}).join(','));
+                i = 0;
+            }
+
+            if (state.finalScore > bestFinalState.finalScore) {
+                bestFinalState = state;
+                this.saveProgress(state.grid, state.foundWords);
+                state.grid.print();
+                log('Result\n' + this.problem + ':\n' + state.foundWords.map(function(f) {return f.join(' ');}).join(',\n'));
+            }
+            // endStates.push(state);
+        }
+    } else {
+
+        var resultScoreCutoff = 0;
+        var c = 0;
+
+        results.some(function(result) {
+            // log('From word: ' + result.word + ' ' + result.score);
+
+            if (result.word === null || result.word.length == 0)
+            {
+                return true;
+            }
+
+            if (result.score >= resultScoreCutoff)
+            {
+                resultScoreCutoff = result.score;// * 0.9;
+            } else {
+                return true;
+            }
+
+            c++;
+
+            var newState = new SearchState(state.problem, new Grid(q.grid), q.bag, result.rack, false);
+            // log("Next state: " + newState.rack + ' and bag ' + newState.bag);
+            newState.totalScore = state.totalScore + result.score;
+            newState.foundWords = state.foundWords.slice(0);
+            var position = this.ROWS[result.row] + this.COLUMNS[result.col];
+            if (!result.horizontal) {
+                position = this.COLUMNS[result.col] + this.ROWS[result.row];
+            }
+            newState.foundWords.push([position, result.word, result.score]);
+            newState.grid.addWord(result.word, result.col, result.row, result.horizontal);
+            states.push(newState);
+            return c > 1;
+        }, this);
+    }
+
+    if (states.length > 0)
+        setImmediate(this.processState.bind(this), states, bestFinalState, i);
+};
+
 Solver.prototype.processAll = function() {
     this.grid.print();
     this.grid.lexicon = this.lexicon;
@@ -498,65 +581,12 @@ Solver.prototype.processAll = function() {
     var searchState = new SearchState(this.problem, this.grid, this.bag, this.rack, true);
     var states = [];
     states.push(searchState);
-    while(states.length > 0) {
-        var state = states.pop();
-        var results = null;
-        var q = null;
-        if (state.bag.length > 0 || state.rack.length > 0)
-        {
-            q = new Query(state.rack, state.bag, state.grid, state.firstWord);
-            results = this.processQuery(q);
-        }
+    var i = 0;
+    setImmediate(this.processState.bind(this), states, bestFinalState, i);
 
-        if (results === null || results.length === 0) {
-            if (state.finalScore == 0) {
-                this.grid = state.grid;
-                // log("Remaining rack: " + state.rack);
-                // log("Remaining bag: " + state.bag);
-                var bagScore = this.grid.scoreWord(state.bag.join(''));
-                var rackScore = this.grid.scoreWord(state.rack.join(''));
-                state.finalScore = (state.totalScore - bagScore - rackScore);
-                log("Total Score: " + state.totalScore  + 
-                    " bagScore: -" + bagScore + 
-                    " rackScore: -" + rackScore + 
-                    " Final Score: " + state.finalScore +
-                    " / " + bestFinalState.finalScore);
-                log(state.foundWords.map(function(f) {return f[1]}).join(','));
+    // while(states.length > 0) {
 
-                if (state.finalScore > bestFinalState.finalScore) {
-                    bestFinalState = state;
-                    this.saveProgress(state.grid, state.foundWords);
-                    state.grid.print();
-                    log('Result\n' + this.problem + ':\n' + state.foundWords.map(function(f) {return f.join(' ');}).join(',\n'));
-                }
-                // endStates.push(state);
-            }
-        } else {
-
-            results.forEach(function(result) {
-
-                // log('From word: ' + result.word + ' ' + result.score);
-
-                if (result.word === null || result.word.length == 0)
-                {
-                    return true;
-                }
-
-                var newState = new SearchState(state.problem, new Grid(q.grid), q.bag, result.rack, false);
-                // log("Next state: " + newState.rack + ' and bag ' + newState.bag);
-                newState.totalScore = state.totalScore + result.score;
-                newState.foundWords = state.foundWords.slice(0);
-                var position = this.ROWS[result.row] + this.COLUMNS[result.col];
-                if (!result.horizontal) {
-                    position = this.COLUMNS[result.col] + this.ROWS[result.row];
-                }
-                newState.foundWords.push([position, result.word, result.score]);
-                newState.grid.addWord(result.word, result.col, result.row, result.horizontal);
-                states.push(newState);
-                return true;
-            }, this);
-        }
-    }
+    // }
 };
 
 Solver.prototype.processAllOld = function() {
