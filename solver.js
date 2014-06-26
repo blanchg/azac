@@ -506,7 +506,8 @@ Solver.prototype.processAll = function() {
                 log("Total Score: " + state.totalScore  + 
                     " bagScore: -" + bagScore + 
                     " rackScore: -" + rackScore + 
-                    " Final Score: " + state.finalScore);
+                    " Final Score: " + state.finalScore +
+                    " / " + bestFinalState.finalScore);
 
                 if (state.finalScore > bestFinalState.finalScore) {
                     bestFinalState = state;
@@ -528,7 +529,7 @@ Solver.prototype.processAll = function() {
                 }
 
                 var newState = new SearchState(state.problem, new Grid(q.grid), q.bag, result.rack, false);
-                log("Next state: " + newState.rack + ' and bag ' + newState.bag);
+                // log("Next state: " + newState.rack + ' and bag ' + newState.bag);
                 newState.totalScore = state.totalScore + result.score;
                 newState.foundWords = state.foundWords.slice(0);
                 var position = this.ROWS[result.row] + this.COLUMNS[result.col];
