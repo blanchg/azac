@@ -1,6 +1,6 @@
 var log = require('./util.js').log;
 var clc = require('cli-color');
-var ansiTrim = require('cli-color/trim');
+// var ansiTrim = require('cli-color/trim');
 
 var ALPHABET = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ'.split('');
 var LETTERSCORES = '1,3,3,2,1,4,2,4,1,8,5,1,3,1,1,3,10,1,1,1,1,4,4,8,4,10'.split(',').map(function(item){return parseInt(item)});
@@ -43,7 +43,7 @@ function Grid(newSize) {
                 // log("Letter " + letter + " at " + index);
                 if (letter == ' ')
                 	letter = '·';
-                this[index] = clc.bold(letter);
+                this[index] = letter.charCodeAt(0) + 10000;
             }, this);
     }
 
@@ -113,8 +113,10 @@ Grid.prototype.wordV = function(col, row, word) {
     // this.print();
     var start = Math.max(row - 1, 0);
     var end = Math.min(this.size, row + word.length + 1);
-    for (var y = start; y < end; y++) {
-    	this.anchors[y * this.size + col] = 1;
+    var istart = start * this.size + col;
+    var iend = end * this.size + col;
+    for (var y = istart; y < iend; y+=this.size) {
+    	this.anchors[y] = 1;
     };
 
     var col1;
@@ -122,8 +124,10 @@ Grid.prototype.wordV = function(col, row, word) {
         col1 = Math.max(col - 1, 0);
         start = row;
         end = row + word.length;
-        for (var y = start; y < end; y++) {
-        	this.anchors[y * this.size + col1] = 1;
+        istart = start * this.size + col1;
+        iend = end * this.size + col1;
+        for (var y = istart; y < iend; y+=this.size) {
+        	this.anchors[y] = 1;
         };
     }
 
@@ -131,8 +135,10 @@ Grid.prototype.wordV = function(col, row, word) {
         col1 = Math.min(col + 1, this.size);
         start = row;
         end = row + word.length;
-        for (var y = start; y < end; y++) {
-        	this.anchors[y * this.size + col1] = 1;
+        istart = start * this.size + col1;
+        iend = end * this.size + col1;
+        for (var y = istart; y < iend; y+=this.size) {
+        	this.anchors[y] = 1;
         };
     }
 }
@@ -189,7 +195,7 @@ Grid.prototype.fits = function(col, row, horizontal, word) {
 		} else {
 			row++;
 		}
-		if (rawCell != letter && cell == ansiTrim(rawCell))
+		if (rawCell != letter && cell == String.fromCharCode(rawCell-10000))
 		{
 			// Doesn't match letter already on board
 			// log('doesn\'t match letter on board');
@@ -219,7 +225,7 @@ Grid.prototype.cell = function(col, row) {
     // if (val === null || val === undefined) {
     // 	log('called with ' + col + ', ' + row);
     // }
-    return ansiTrim(val);
+    return isNaN(val)?val:String.fromCharCode(val - 10000);
 }
 
 Grid.prototype.letter = function(col, row) {
@@ -249,9 +255,19 @@ Grid.prototype.print = function (target) {
         var num = x + 1;
         if (num < 10)
             num = ' ' + num;
-    	var line = num + '|' + this.slice(x * this.size,x*this.size + this.size).join('') + '|';
-    	if (trim)
-    		line = ansiTrim(line);
+
+        var line = this.slice(x * this.size,x*this.size + this.size).map(function(letter) {
+            if (isNaN(letter)) {
+                return letter;
+            } else {
+                var ch = String.fromCharCode(letter - 10000);
+                return trim?ch:clc.bold(ch);
+            }
+        }).join('');
+
+    	line = num + '|' + line + '|';
+        
+    	// var line = line.split('').join('');
         target(line);
     };
 }
@@ -279,11 +295,16 @@ Grid.prototype.scoreLetter = function(letter) {
     return score;
 }
 
+var TRIPLE_WORD = 'T'.charCodeAt(0) + 10000;
+var DOUBLE_WORD = 'D'.charCodeAt(0) + 10000;
+var TRIPLE_LETTER = 't'.charCodeAt(0) + 10000;
+var DOUBLE_LETTER = 'd'.charCodeAt(0) + 10000;
+
 Grid.prototype.wordMultiplier = function(cell) {
     switch(cell) {
-        case clc.bold('T'):
+        case TRIPLE_WORD:
             return 3;
-        case clc.bold('D'):
+        case DOUBLE_WORD:
             return 2;
         default:
             return 1;
@@ -293,9 +314,9 @@ Grid.prototype.wordMultiplier = function(cell) {
 Grid.prototype.letterMultiplier = function(cell) {
 
     switch(cell) {
-        case clc.bold('t'):
+        case TRIPLE_LETTER:
             return 3;
-        case clc.bold('d'):
+        case DOUBLE_LETTER:
             return 2;
         default:
             return 1;

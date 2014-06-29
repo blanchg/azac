@@ -265,9 +265,10 @@ Gordon.prototype.findWordArc = function(word, arc) {
 		return false;
 	var found = false;
 	var reverse = true;
+	var lastLetterIndex = word.length - 1;
 	var failed = word.split('').some(function(letter,i) {
 
-		var endLetter = i == word.length - 1;
+		var endLetter = i == lastLetterIndex;
 		var secondLetter = i == 1;
 		if (secondLetter) {
 			arc = this.nextArc(arc, this.separator);
