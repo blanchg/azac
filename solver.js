@@ -488,7 +488,7 @@ Solver.prototype.processQuery = function(query) {
     return this.results;
 }
 
-var SearchState = function(problem, grid, bag, rack, firstWord) {
+var SearchState = function(problem, grid, bag, rack, firstWord, percentWork, depth) {
     this.finalScore = 0;
     this.totalScore = 0;
     this.foundWords =[];
@@ -497,21 +497,27 @@ var SearchState = function(problem, grid, bag, rack, firstWord) {
     this.grid = grid;
     this.bag = bag;
     this.rack = rack;
+    this.percentWork = percentWork;
+    this.depth = depth;
 }
 
 Solver.prototype.processState = function(states, bestFinalState, i) {
     var state = states.pop();
     var results = null;
     var q = null;
+
+
     if (state.bag.length > 0 || state.rack.length > 0)
     {
         q = new Query(state.rack, state.bag, state.grid, state.firstWord);
         results = this.processQuery(q);
     }
+
     i++;
 
     if (results === null || results.length === 0) {
         if (state.finalScore == 0) {
+            this.percentDone += state.percentWork;
             this.grid = state.grid;
             // log("Remaining rack: " + state.rack);
             // log("Remaining bag: " + state.bag);
@@ -520,11 +526,16 @@ Solver.prototype.processState = function(states, bestFinalState, i) {
             state.finalScore = (state.totalScore - bagScore - rackScore);
 
             if (i > 1000) {
+                this.totalBoards++;
                 log("Total Score: " + state.totalScore  + 
                     " bagScore: -" + bagScore + 
                     " rackScore: -" + rackScore + 
                     " Final Score: " + state.finalScore +
-                    " / " + bestFinalState.finalScore);
+                    " / " + bestFinalState.finalScore +
+                    "  " + (this.percentDone * 100) + "%" +
+                    " Depth: " + state.depth +
+                    " Boards: " + (this.totalBoards*1000) + 
+                    " / " + ((this.totalBoards*1000)/this.percentDone).toFixed(0));
                 log(state.foundWords.map(function(f) {return f[1]}).join(','));
                 console.timeEnd('1000 Queries');
                 i = 0;
@@ -540,33 +551,29 @@ Solver.prototype.processState = function(states, bestFinalState, i) {
                     " bagScore: -" + bagScore + 
                     " rackScore: -" + rackScore + 
                     " Final Score: " + state.finalScore +
-                    " / " + bestFinalState.finalScore);
+                    " / " + bestFinalState.finalScore +
+                    "  " + (this.percentDone * 100) + "%" +
+                    " Depth: " + state.depth +
+                    " Boards: " + this.totalBoards + "k");
             }
             // endStates.push(state);
         }
     } else {
 
+        var percentWork = state.percentWork / results.length;
+        
         var resultScoreCutoff = 0;
-        var c = 0;
 
-        results.some(function(result) {
+        results.some(function(result, k) {
             // log('From word: ' + result.word + ' ' + result.score);
 
-            if (result.word === null || result.word.length == 0)
-            {
-                return true;
-            }
 
-            // if (result.score >= resultScoreCutoff)
+            // if (result.word === null || result.word.length == 0)
             // {
-            //     resultScoreCutoff = result.score * 0.9;
-            // } else {
+            //     log("GOT HERE!!!!!");
             //     return true;
             // }
-
-            c++;
-
-            var newState = new SearchState(state.problem, new Grid(q.grid), q.bag, result.rack, false);
+            var newState = new SearchState(state.problem, new Grid(q.grid), q.bag, result.rack, false, percentWork, state.depth + 1);
             // log("Next state: " + newState.rack + ' and bag ' + newState.bag);
             newState.totalScore = state.totalScore + result.score;
             newState.foundWords = state.foundWords.slice(0);
@@ -586,6 +593,8 @@ Solver.prototype.processState = function(states, bestFinalState, i) {
 };
 
 Solver.prototype.processAll = function() {
+    this.percentDone = 0;
+    this.totalBoards = 0;
     this.grid.print();
     this.grid.lexicon = this.lexicon;
 
@@ -600,7 +609,7 @@ Solver.prototype.processAll = function() {
 
     // var endStates = [];
     var bestFinalState = new SearchState();
-    var searchState = new SearchState(this.problem, this.grid, this.bag, this.rack, true);
+    var searchState = new SearchState(this.problem, this.grid, this.bag, this.rack, true, 1, 0);
     var states = [];
     states.push(searchState);
     var i = 0;
