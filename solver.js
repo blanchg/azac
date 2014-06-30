@@ -460,20 +460,20 @@ Solver.prototype.processQuery = function(query) {
         // log(' ' + i);
     }, this);
 
-    // this.results.sort(function(a,b){
-    //     if (a.score > b.score)
-    //         return 1;
-    //     else if (a.score < b.score)
-    //         return -1;
-    //     var al = a.word.length;
-    //     var bl = b.word.length;
-    //     if (al < bl)
-    //         return -1;
-    //     else if (al > bl)
-    //         return 1;
+    this.results.sort(function(a,b){
+        if (a.score > b.score)
+            return 1;
+        else if (a.score < b.score)
+            return -1;
+        var al = a.word.length;
+        var bl = b.word.length;
+        if (al < bl)
+            return -1;
+        else if (al > bl)
+            return 1;
 
-    //     return 0;
-    // });
+        return 0;
+    });
     // log("Results: " + this.results.join('\n'));
     // log("Found " + this.results.length + " words");
     // this.results = this.results.unique();
