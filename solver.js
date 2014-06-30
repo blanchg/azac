@@ -206,9 +206,9 @@ Solver.prototype.Anchor = Anchor;
 
 Anchor.prototype.move = function(pos) {
     if (this.horizontal) {
-        return new Anchor(this.x + pos, this.y, this.horizontal);
+        return new Anchor(this.x + pos, this.y, this.horizontal, this.lookLeft);
     } else {
-        return new Anchor(this.x, this.y + pos, this.horizontal);
+        return new Anchor(this.x, this.y + pos, this.horizontal, this.lookLeft);
     }
 };
 Anchor.prototype.toString = function() {
@@ -368,8 +368,7 @@ Solver.prototype.goOn = function(anchor, pos, l, result, rack, newArc, oldArc, f
     // log(space + 'pos: ' + pos);
     // log(space + 'l: ' + l);
     var L = l.toUpperCase();
-    var tryLeft = pos < 0 || pos == 0 && anchor.lookLeft == true;
-    if (tryLeft) {
+    if (pos <= 0) {
         var leftPos = anchor.move(pos - 1);
         result = l + result;
         // log(space + 'result: ' + result);
@@ -382,7 +381,7 @@ Solver.prototype.goOn = function(anchor, pos, l, result, rack, newArc, oldArc, f
         }
         if (newArc !== null) {
             // log(space + 'new arc and room left:' + this.grid.roomLeft(anchor, pos));
-            if (this.grid.roomLeft(anchor, pos)) {
+            if (anchor.lookLeft && this.grid.roomLeft(anchor, pos)) {
                 this.gen(anchor, pos - 1, result, rack, newArc, firstWord, space);
             }
             newArc = this.nextArc(newArc, this.grid.lexicon.separator);
@@ -520,16 +519,16 @@ Solver.prototype.processState = function(states, bestFinalState, i) {
             var rackScore = this.grid.scoreWord(state.rack.join(''));
             state.finalScore = (state.totalScore - bagScore - rackScore);
 
-            if (i > 100) {
+            if (i > 1000) {
                 log("Total Score: " + state.totalScore  + 
                     " bagScore: -" + bagScore + 
                     " rackScore: -" + rackScore + 
                     " Final Score: " + state.finalScore +
                     " / " + bestFinalState.finalScore);
                 log(state.foundWords.map(function(f) {return f[1]}).join(','));
-                console.timeEnd('100 Queries');
+                console.timeEnd('1000 Queries');
                 i = 0;
-                console.time('100 Queries');
+                console.time('1000 Queries');
             }
 
             if (state.finalScore > bestFinalState.finalScore) {
@@ -558,12 +557,12 @@ Solver.prototype.processState = function(states, bestFinalState, i) {
                 return true;
             }
 
-            if (result.score >= resultScoreCutoff)
-            {
-                resultScoreCutoff = result.score;// * 0.9;
-            } else {
-                return true;
-            }
+            // if (result.score >= resultScoreCutoff)
+            // {
+            //     resultScoreCutoff = result.score * 0.9;
+            // } else {
+            //     return true;
+            // }
 
             c++;
 
@@ -578,7 +577,7 @@ Solver.prototype.processState = function(states, bestFinalState, i) {
             newState.foundWords.push([position, result.word, result.score]);
             newState.grid.addWord(result.word, result.col, result.row, result.horizontal);
             states.push(newState);
-            return c > 1;
+            return false;//c > 1;
         }, this);
     }
 
@@ -605,7 +604,7 @@ Solver.prototype.processAll = function() {
     var states = [];
     states.push(searchState);
     var i = 0;
-    console.time('100 Queries');
+    console.time('1000 Queries');
     setImmediate(this.processState.bind(this), states, bestFinalState, i);
 
     // while(states.length > 0) {

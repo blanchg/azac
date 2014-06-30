@@ -123,7 +123,7 @@ describe('Solver', function() {
 			var A = Solver.prototype.Anchor;
 
 			// FIRST WORD
-			var anchor = new A(7,7,true);
+			var anchor = new A(7,7,true,true);
 			solver.results = [];
 			solver.wordDict = {};
 		    solver.gen(anchor, 0, "", 'OPIATE'.split(''), solver.lexicon.initialArc(), true);
@@ -134,7 +134,7 @@ describe('Solver', function() {
 			// SECOND WORD
 			solver.results = [];
 			solver.wordDict = {};
-			var anchor = new A(2,7,true);
+			var anchor = new A(2,7,true,true);
 		    solver.gen(anchor, 0, "", 'CROP'.split(''), solver.lexicon.initialArc(), false);
 			// log('Results: ' + JSON.stringify(solver.results, null, 2));
 			solver.results.should.have.length(0);
@@ -158,7 +158,7 @@ describe('Solver', function() {
 			var A = Solver.prototype.Anchor;
 
 			// FIRST WORD
-			var anchor = new A(7,7,true);
+			var anchor = new A(7,7,true,true);
 			solver.results = [];
 			solver.wordDict = {};
 		    solver.gen(anchor, 0, "", 'OPIATE'.split(''), solver.lexicon.initialArc(), true);
@@ -171,7 +171,7 @@ describe('Solver', function() {
 			// SECOND WORD
 			solver.results = [];
 			solver.wordDict = {};
-			var anchor = new A(1,7,true);
+			var anchor = new A(1,7,true,true);
 		    solver.gen(anchor, 0, "", 'CROP'.split(''), solver.lexicon.initialArc(), false);
 			// log('Results: ' + JSON.stringify(solver.results, null, 2));
 			solver.results.should.have.length(1);
@@ -204,7 +204,7 @@ describe('Solver', function() {
 			var A = Solver.prototype.Anchor;
 			log('first');
 			// FIRST WORD
-			var anchor = new A(2,7,true);
+			var anchor = new A(2,7,true,true);
 			solver.results = [];
 			solver.wordDict = {};
 		    solver.gen(anchor, 0, "", 'OPIATE'.split(''), solver.lexicon.initialArc(), true);
@@ -217,7 +217,7 @@ describe('Solver', function() {
 			// SECOND WORD
 			solver.results = [];
 			solver.wordDict = {};
-			var anchor = new A(8, 7,false);
+			var anchor = new A(8, 7,false,true);
 		    solver.gen(anchor, 0, "", 'DID'.split(''), solver.lexicon.initialArc(), false);
 			// log('Results: ' + JSON.stringify(solver.results, null, 2));
 			solver.results.should.have.length(2);
@@ -229,7 +229,7 @@ describe('Solver', function() {
 			// THIRD WORD
 			solver.results = [];
 			solver.wordDict = {};
-			var anchor = new A(2,8,true);
+			var anchor = new A(2,8,true,true);
 		    solver.gen(anchor, 0, "", 'RINGER'.split(''), solver.lexicon.initialArc(), false);
 			log('Results: ' + JSON.stringify(solver.results, null, 2));
 			solver.results.should.have.length(1);
@@ -254,7 +254,7 @@ describe('Solver', function() {
 
 			solver.grid.lexicon = solver.lexicon;
 			var A = Solver.prototype.Anchor;
-			var anchor = new A(7,7,true);
+			var anchor = new A(7,7,true,true);
 			solver.results = [];
 			solver.wordDict = {};
 		    solver.gen(anchor, 0, "", 'BMLUNNR'.split(''), solver.lexicon.initialArc(), true);
@@ -267,13 +267,51 @@ describe('Solver', function() {
 			// SECOND WORD
 			solver.results = [];
 			solver.wordDict = {};
-			var anchor = new A(8, 7,false);
+			var anchor = new A(8, 7,false,true);
 		    solver.gen(anchor, 0, "", 'LNRESET'.split(''), solver.lexicon.initialArc(), false);
 			// log('Results: ' + JSON.stringify(solver.results, null, 2));
 			solver.results.should.have.length(1);
 			r = solver.results[0]
 			solver.grid.addWord(r.word, r.col, r.row, r.horizontal);
 			solver.grid.print();
+
+		});
+
+		it('should not find aona', function() {
+			solver.lexicon = new Gordon();
+			solver.lexicon.addWord('TOPI');
+			solver.lexicon.addWord('AIRT');
+			solver.lexicon.addWord('AIRT');
+			solver.lexicon.addWord('ATRIA');
+			solver.lexicon.addWord('IT');
+			log(solver.lexicon.allWords());
+			log(solver.lexicon.toDot());
+
+			solver.grid.lexicon = solver.lexicon;
+			var A = Solver.prototype.Anchor;
+			var anchor = new A(7,7,true,true);
+			solver.results = [];
+			solver.wordDict = {};
+		    solver.gen(anchor, 0, "", 'AIOIETP'.split(''), solver.lexicon.initialArc(), true);
+			log('Results: ' + JSON.stringify(solver.results, null, 2));
+			// solver.results.should.have.length(4);
+			var r = solver.results[3]; //bestResult(solver.results);
+			solver.grid.addWord(r.word, r.col, r.row, r.horizontal);
+			solver.grid.print();
+
+			log('second');
+			// SECOND WORD
+			solver.results = [];
+			solver.wordDict = {};
+			var anchor = new A(8, 8,true,false);
+		    solver.gen(anchor, 0, "", 'AEIIRRT'.split(''), solver.lexicon.initialArc(), false);
+			// log('Results: ' + JSON.stringify(solver.results, null, 2));
+			solver.results.should.have.length(0);
+			// r = bestResult(solver.results);
+			// solver.grid.addWord(r.word, r.col, r.row, r.horizontal);
+			// solver.grid.print();
+			// solver.lexicon.findWord(r.word).should.be.ok();
+
 
 		});
 	});

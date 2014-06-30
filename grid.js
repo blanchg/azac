@@ -5,6 +5,23 @@ var clc = require('cli-color');
 var ALPHABET = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ'.split('');
 var LETTERSCORES = '1,3,3,2,1,4,2,4,1,8,5,1,3,1,1,3,10,1,1,1,1,4,4,8,4,10'.split(',').map(function(item){return parseInt(item)});
 
+var BOARD = 
+    "T  d   T   d  T" +
+    " D   t   t   D " +
+    "  D   d d   D  " +
+    "d  D   d   D  d" +
+    "    D     D    " +
+    " t   t   t   t " +
+    "  d   d d   d  " +
+    "T  d   D   d  T" +
+    "  d   d d   d  " +
+    " t   t   t   t " +
+    "    D     D    " +
+    "d  D   d   D  d" +
+    "  D   d d   D  " +
+    " D   t   t   D " +
+    "T  d   T   d  T";
+
 function Grid(newSize) {
     if (newSize.constructor === Grid) {
         this.size = newSize.size;
@@ -18,33 +35,17 @@ function Grid(newSize) {
         this.size = newSize;
         this.length = this.size*this.size;
         this.lexicon = null;
-        this.fill(' ', 0, this.length);
+        this.fill(null, 0, this.length);
         this.anchors = new Array(this.length);
         this.anchors.fill(0, 0, this.length);
         
-        this.board = 
-        "T  d   T   d  T" +
-        " D   t   t   D " +
-        "  D   d d   D  " +
-        "d  D   d   D  d" +
-        "    D     D    " +
-        " t   t   t   t " +
-        "  d   d d   d  " +
-        "T  d   D   d  T" +
-        "  d   d d   d  " +
-        " t   t   t   t " +
-        "    D     D    " +
-        "d  D   d   D  d" +
-        "  D   d d   D  " +
-        " D   t   t   D " +
-        "T  d   T   d  T";
-        this.board.split('')
-            .forEach(function(letter, index) {
-                // log("Letter " + letter + " at " + index);
-                if (letter == ' ')
-                	letter = '·';
-                this[index] = letter.charCodeAt(0) + 10000;
-            }, this);
+        // BOARD.split('')
+        //     .forEach(function(letter, index) {
+        //         // log("Letter " + letter + " at " + index);
+        //         if (letter == ' ')
+        //         	letter = '·';
+        //         this[index] = letter.charCodeAt(0) + 10000;
+        //     }, this);
     }
 
 
@@ -187,7 +188,7 @@ Grid.prototype.fits = function(col, row, horizontal, word) {
 
 	var result = !word.split('').some(function (letter) {
 		var rawCell = this.rawCell(col, row);
-		var cell = this.rawCell(col, row);
+		// var cell = this.rawCell(col, row);
 		// log('Letter ' + letter + ' fits ' + rawCell + ' ' + cell + ' (' + col + ', ' + row + ')');
 		if (horizontal)
 		{
@@ -195,7 +196,7 @@ Grid.prototype.fits = function(col, row, horizontal, word) {
 		} else {
 			row++;
 		}
-		if (rawCell != letter && cell == String.fromCharCode(rawCell-10000))
+		if (rawCell !== null && rawCell !== letter)
 		{
 			// Doesn't match letter already on board
 			// log('doesn\'t match letter on board');
@@ -208,6 +209,14 @@ Grid.prototype.fits = function(col, row, horizontal, word) {
 	return result;
 }
 
+Grid.prototype.boardCell = function(col, row) {
+    if (row >= this.size || col >= this.size) {
+        return null;
+    }
+    var i = row * this.size + col;
+    return BOARD[i];
+};
+
 Grid.prototype.rawCell = function(col, row) {
 	if (row >= this.size || col >= this.size) {
 		return null;
@@ -216,26 +225,26 @@ Grid.prototype.rawCell = function(col, row) {
     return this[i];
 }
 
-Grid.prototype.cell = function(col, row) {
-	if (row >= this.size || col >= this.size) {
-		return null;
-	}
-    var i = row * this.size + col;
-    var val = this[i];
-    // if (val === null || val === undefined) {
-    // 	log('called with ' + col + ', ' + row);
-    // }
-    return isNaN(val)?val:String.fromCharCode(val - 10000);
-}
+// Grid.prototype.cell = function(col, row) {
+// 	if (row >= this.size || col >= this.size) {
+// 		return null;
+// 	}
+//     var i = row * this.size + col;
+//     var val = this[i];
+//     // if (val === null || val === undefined) {
+//     // 	log('called with ' + col + ', ' + row);
+//     // }
+//     return isNaN(val)?val:String.fromCharCode(val - 10000);
+// }
 
 Grid.prototype.letter = function(col, row) {
-    var raw = this.rawCell(col, row);
-    var cell = this.cell(col, row);
-    if (raw === cell) {
-        return cell;
-    } else {
-        return null;
-    }
+    return this.rawCell(col, row);
+    // var cell = this.cell(col, row);
+    // if (raw === cell) {
+    //     return cell;
+    // } else {
+    //     return null;
+    // }
 };
 
 Grid.prototype.print = function (target) {
@@ -255,12 +264,13 @@ Grid.prototype.print = function (target) {
         var num = x + 1;
         if (num < 10)
             num = ' ' + num;
-
-        var line = this.slice(x * this.size,x*this.size + this.size).map(function(letter) {
-            if (isNaN(letter)) {
+        var start = x * this.size;
+        var line = this.slice(start,start + this.size).map(function(letter, j) {
+            if (letter !== null) {
                 return letter;
             } else {
-                var ch = String.fromCharCode(letter - 10000);
+                var ch = BOARD[start + j];
+                // var ch = String.fromCharCode(letter - 10000);
                 return trim?ch:clc.bold(ch);
             }
         }).join('');
@@ -295,10 +305,10 @@ Grid.prototype.scoreLetter = function(letter) {
     return score;
 }
 
-var TRIPLE_WORD = 'T'.charCodeAt(0) + 10000;
-var DOUBLE_WORD = 'D'.charCodeAt(0) + 10000;
-var TRIPLE_LETTER = 't'.charCodeAt(0) + 10000;
-var DOUBLE_LETTER = 'd'.charCodeAt(0) + 10000;
+var TRIPLE_WORD = 'T';//.charCodeAt(0) + 10000;
+var DOUBLE_WORD = 'D';//.charCodeAt(0) + 10000;
+var TRIPLE_LETTER = 't';//.charCodeAt(0) + 10000;
+var DOUBLE_LETTER = 'd';//.charCodeAt(0) + 10000;
 
 Grid.prototype.wordMultiplier = function(cell) {
     switch(cell) {
@@ -327,8 +337,8 @@ Grid.prototype.cellEmpty = function(col, row) {
 	if (col < 0 || row < 0)
 		return true;
 	var rawCell = this.rawCell(col, row);
-	var cell = this.cell(col, row); 
-	return cell !== rawCell || cell === ' ';
+	// var cell = this.cell(col, row); 
+	return rawCell === null;
 }
 
 Grid.prototype.prefix = function(col, row, horizontal) {
@@ -340,13 +350,13 @@ Grid.prototype.prefix = function(col, row, horizontal) {
 			if (this.cellEmpty(itemCol, row)) {
 				break;
 			}
-			word = this.cell(itemCol, row) + word;
+			word = this.rawCell(itemCol, row) + word;
 		};
 	} else {
 		for (var itemRow = row-1; itemRow >= 0; itemRow--) {
 			if (this.cellEmpty(col, itemRow))
 				break;
-			word = this.cell(col, itemRow) + word;
+			word = this.rawCell(col, itemRow) + word;
 		};
 	}
 	return word;
@@ -361,13 +371,13 @@ Grid.prototype.suffix = function(col, row, horizontal) {
 			if (this.cellEmpty(itemCol, row)) {
 				break;
 			}
-			word += this.cell(itemCol, row);
+			word += this.rawCell(itemCol, row);
 		};
 	} else {
 		for (var itemRow = row+1; itemRow < this.size; itemRow++) {
 			if (this.cellEmpty(col, itemRow))
 				break;
-			word += this.cell(col, itemRow);
+			word += this.rawCell(col, itemRow);
 		};
 	}
 	return word;
@@ -426,9 +436,11 @@ Grid.prototype.validateMove = function(word, col, row, horizontal, firstWord, ra
     var letterPlaced = false;
 
     if (!this.beforeEmpty(col, row, horizontal)) {
+        // log('Before not empty');
         return -1;
     }
     if (!this.afterEmpty(word, col, row, horizontal)) {
+        // log('After not empty');
         return -1;
     }
 
@@ -438,14 +450,15 @@ Grid.prototype.validateMove = function(word, col, row, horizontal, firstWord, ra
         var rawCell = this.rawCell(cellCol, cellRow);
         
         // Outside of grid or word in place
-        if (rawCell === null)
-            return true;
+        // if (rawCell === null) {
+        //     log('Not in grid');
+        //     return true;
+        // }
 
-        var cell = this.cell(cellCol, cellRow);
-        if (cell === rawCell && cell === letter) {
+        if (rawCell === letter) {
             foundHook = true;
         }
-        if (cell !== rawCell) {
+        if (rawCell === null) {
         	letterPlaced = true;
         }
 
@@ -453,9 +466,11 @@ Grid.prototype.validateMove = function(word, col, row, horizontal, firstWord, ra
             foundMiddle = true;
         }
 
-        var letterMultiplier = this.letterMultiplier(rawCell);
+        var boardCell = this.boardCell(cellCol, cellRow);
+
+        var letterMultiplier = rawCell === null?this.letterMultiplier(boardCell):1;
         var letterScore = this.scoreLetter(letter);
-        var wordMultiplier = this.wordMultiplier(rawCell)
+        var wordMultiplier = rawCell === null?this.wordMultiplier(boardCell):1;
         var altScore = 0;
         if (this.lexicon !== null) {
         	// log(cellCol + ', ' + cellRow + ' ' + horizontal);
@@ -477,10 +492,12 @@ Grid.prototype.validateMove = function(word, col, row, horizontal, firstWord, ra
 	        }
 		}
 
-        // log(rawCell + ' ' + letter + ' ' + letterScore + ' * ' + letterMultiplier + ' = ' + (letterScore * letterMultiplier + altScore) + ' (' + altScore + ')');
+        // log(boardCell + ' ' + letter + ' ' + letterScore + ' * ' + letterMultiplier + ' = ' + (letterScore * letterMultiplier + altScore) + ' (' + altScore + ')');
         totalScore += letterScore * letterMultiplier;
         totalAltScore += altScore;
+        // if (letterScore > 0)
         totalWordMultiplier = totalWordMultiplier * wordMultiplier;
+        // log('Word multiplier: ' + totalWordMultiplier);
 
         return false;
     }, this);

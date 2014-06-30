@@ -9,7 +9,7 @@ describe("Grid", function() {
  		grid = new Grid(15);
 	});
 
-	it.only("anchors horizontal", function() {
+	it("anchors horizontal", function() {
 		grid.addWord('OPIATE', 2, 7, true);
 		// console.log('Anchors: "' + grid.anchors.join('') + '"');
 		grid.printAnchors();
@@ -44,8 +44,8 @@ console.log('');
 
 	it("should allow adding a word", function() {
 		grid.addWord('OPIATE', 7, 2, false);
-		grid.cell(7, 2).should.be.exactly('O');
-		grid.cell(7, 3).should.be.exactly('P');
+		grid.rawCell(7, 2).should.be.exactly('O');
+		grid.rawCell(7, 3).should.be.exactly('P');
 	});
 
 	it("should be able to tell me if a cell is empty", function() {
