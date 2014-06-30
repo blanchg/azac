@@ -534,8 +534,8 @@ Solver.prototype.processState = function(states, bestFinalState, i) {
                     " / " + bestFinalState.finalScore +
                     "  " + (this.percentDone * 100) + "%" +
                     " Depth: " + state.depth +
-                    " Boards: " + (this.totalBoards*1000) + 
-                    " / " + ((this.totalBoards*1000)/this.percentDone).toFixed(0));
+                    " Boards: " + (this.totalBoards) + 
+                    " / " + ((this.totalBoards)/this.percentDone).toFixed(0));
                 log(state.foundWords.map(function(f) {return f[1]}).join(','));
                 console.timeEnd('1000 Queries');
                 i = 0;
