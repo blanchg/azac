@@ -424,18 +424,12 @@ Solver.prototype.goOn = function(anchor, pos, l, result, rack, newArc, oldArc, f
     }
 };
 
-
-
 var Query = function(rack, bag, grid, firstWord) {
     this.rack = rack.slice(0);
     this.bag = bag.slice(0);
     this.grid = new Grid(grid);
     this.firstWord = firstWord;
 }
-
-// var Query2 = function() {
-//     this.rack = null
-// }
 
 Solver.prototype.processQuery = function(query) {
     this.rack = query.rack;
@@ -566,13 +560,6 @@ Solver.prototype.processState = function(states, bestFinalState, i) {
 
         results.some(function(result, k) {
             // log('From word: ' + result.word + ' ' + result.score);
-
-
-            // if (result.word === null || result.word.length == 0)
-            // {
-            //     log("GOT HERE!!!!!");
-            //     return true;
-            // }
             var newState = new SearchState(state.problem, new Grid(q.grid), q.bag, result.rack, false, percentWork, state.depth + 1);
             // log("Next state: " + newState.rack + ' and bag ' + newState.bag);
             newState.totalScore = state.totalScore + result.score;
@@ -607,7 +594,6 @@ Solver.prototype.processAll = function() {
         return;
     }
 
-    // var endStates = [];
     var bestFinalState = new SearchState();
     var searchState = new SearchState(this.problem, this.grid, this.bag, this.rack, true, 1, 0);
     var states = [];
@@ -616,98 +602,4 @@ Solver.prototype.processAll = function() {
     console.time('1000 Queries');
     setImmediate(this.processState.bind(this), states, bestFinalState, i);
 
-    // while(states.length > 0) {
-
-    // }
 };
-
-Solver.prototype.processAllOld = function() {
-try {
-    log('ready to process');
-
-    var totalScore = 0;
-    var foundWords = [];
-    var firstWord = true;
-
-    this.grid.print();
-    this.grid.lexicon = this.lexicon;
-    var col = 3;
-    var row = 7;
-
-    if (this.grid.lexicon.findWord('TE')) {
-        log('ERROR can find word TE!');
-        return;
-    }
-    if (this.grid.lexicon.findWord('EASOZ')) {
-        log('ERROR can find word EASOZ!');
-        return;
-    }
-
-    while (this.bag.length > 0 || this.rack.length > 0)
-    {
-        this.fillRack(this.rack, this.bag);
-        log('Starting Rack: ' + this.rack);
-        log('bag: ' + this.bag.join(''));
-        
-        var result = new Result(null, null, null, 0, 0, true, 0);
-
-        var anchors = this.getAnchors(firstWord);
-
-        this.results = [];
-        this.wordDict = {};
-        log('Found: ' + anchors.length + ' anchors');
-        anchors.forEach(function (anchor, i) {
-            // log(i);
-            this.gen(anchor, 0, "", this.rack.slice(0), this.grid.lexicon.initialArc(), firstWord);
-            // log(' ' + i);
-        }, this);
-
-        this.results.sort();
-        // log("Results: " + this.results.join('\n'));
-        log("Found " + this.results.length + " words");
-        // this.results = this.results.unique();
-        // log("Found " + this.results.length + " unique words");
-
-        this.results.forEach(function (r) {
-            log(' ' + r.word + ' = ' + r.score + ' ' + r.col + ',' + r.row + ' ' + r.horizontal);
-            if (r.score > result.score) {
-                result = r;
-            }
-        }, this);
-        firstWord = false;
-
-        log('word: ' + result.word);
-        if (!result.word || result.word.length == 0)
-        {
-            log("Reached end rack " + this.rack.join("") + " bag " + this.bag.length);
-            break;
-        }
-        // log("Scoring word: " + word + ' replacements: ' + wordReplacements + ' hook: ' + wordHook);
-        var wordRack = this.rack.slice(0).join('');
-        this.rack = result.rack; //this.reduceRack(this.rack.slice(0), result.word, result.hook.split(''), true, result.replacements);
-        var position = this.ROWS[result.row] + this.COLUMNS[result.col];
-        if (!result.horizontal) {
-            position = this.COLUMNS[result.col] + this.ROWS[result.row];
-        }
-        var remainingRack = this.rack.join('');
-        if (result.hook) {
-            log(position + ' ' + result.word + " off hook " + result.hook + " using " + wordRack + " leftover letters " + remainingRack + " scores " + result.score);
-        } else {
-            log(position + ' ' + result.word + " using " + wordRack + " leftover letters " + remainingRack + " scores " + result.score);
-        }
-        totalScore += result.score;
-        log('total: ' + totalScore);
-        foundWords.push([position, result.word, result.score]);
-        this.grid.addWord(result.word, result.col, result.row, result.horizontal);
-        this.grid.print();
-        this.saveProgress(this.grid, foundWords);
-
-    }
-    var bagScore = this.grid.scoreWord(this.bag.join(''));
-    var rackScore = this.grid.scoreWord(this.rack.join(''));
-    log("Total Score: " + totalScore  + " bagScore: -" + bagScore + " rackScore: -" + rackScore + " Final Score: " + (totalScore - bagScore - rackScore));
-
-} finally {
-    log('Result\n' + this.problem + ':\n' + foundWords.map(function(f) {return f.join(' ');}).join(',\n'));
-}
-}
