@@ -72,8 +72,10 @@ var problems = {
     Z: 'ZQSELYRKALAFEBVFRUSHND?UE?REAAEITIGNALOURRAVGOTTXSOOYDMPOSAIEIIAEOIPRHEEETNTCBNMDUGDIJIOWLTCIEOENWNA'
 }
 
-var ALPHABET = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ'.split('');
-var scores = '1,3,3,2,1,4,2,4,1,8,5,1,3,1,1,3,10,1,1,1,1,4,4,8,4,10'.split(',').map(function(item){return parseInt(item)});
+var ALPHABET = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ?'.split('');
+var scores = '1,3,3,2,1,4,2,4,1,8,5,1,3,1,1,3,10,1,1,1,1,4,4,8,4,10,0'.split(',').map(function(item){return parseInt(item)});
+var COLUMNS = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ'.split('');
+var ROWS = [1,2,3,4,5,6,7,8,9,10,11,12,13,14,15];
 
 var problem = "A";
 var bag = problems[problem].split("");
@@ -121,6 +123,9 @@ function reduceBag(word, bag) {
     var failed = word.split('').some(function(letter) {
         var index = bag.indexOf(letter);
         if (index == -1) {
+            index = bag.indexOf('?');
+        }
+        if (index == -1) {
             return true;
         }
         bag[index] = bag[bag.length - 1];
@@ -128,6 +133,40 @@ function reduceBag(word, bag) {
         return false;
     });
     return failed;
+}
+
+function reduceBagLast(word, bag) {
+    var failed = word.split('').some(function(letter) {
+        var index = bag.lastIndexOf(letter);
+        if (index == -1) {
+            return true;
+        }
+        bag[index] = bag[bag.length - 1];
+        bag.length = bag.length - 1;
+        return false;
+    });
+    return failed;
+}
+
+function findSubWords(word, x, y, horizontal, list) {
+    var results = [];
+    var len = word.length;
+    word.split('').forEach(function(letter, i) {
+        var subword = '';
+        for (var j = i; j < word.length; j++) {
+            subword += word[j];
+            if (list.indexOf(subword) != -1)
+            {
+                results.push({word:subword, x:x, y:y, horizontal:horizontal});
+            }
+        };
+        if (horizontal) {
+            x++;
+        } else {
+            y++;
+        }
+    });
+    return results;
 }
 
 var finder = new WordFinder();
@@ -151,17 +190,53 @@ finder.loadText(function(words){
     // log("Scores: " + wordScores.map(function(a) {return a.word + ": " + a.score}).join("\n"));
 
     var combinations = [];
+    var firstWord;
+    var secondWord;
 
-    wordScores.forEach(function (score, i) {
-        var firstWord = score.word;
+    wordScores.some(function (score, i) {
+        firstWord = score.word;
         var leftover = bag.slice(0);
-        reduceBag(firstWord, leftover);
-
-        var secondWords = wordsInBag(possibleWords, leftover).slice(0,1);
-        var secondWordScores = scoreWords(secondWords);
+        reduceBagLast(firstWord, leftover);
+        // log("leftover first: " + leftover.join(''));
+        var secondWords = wordsInBag(possibleWords, leftover);
+        var startsWithWords = secondWords.filter(function(word) {
+            return (word.charAt(0) == firstWord.charAt(7));
+        });
+        if (startsWithWords.length == 0)
+            return false;
+        var secondWordScores = scoreWords(startsWithWords.length > 0?startsWithWords:secondWords);
         secondWordScores.sort(sortByScore);
-        log(" " + firstWord + " " + score.score + " : " + secondWordScores[0].word + " " + secondWordScores[0].score);
+        secondWordScores.slice(0,1);
+        secondWord = secondWordScores[0].word;
+        reduceBagLast(secondWordScores[0].word, leftover);
+        // log("leftover sec: " + leftover.join(''));
+
+        // var thirdWords = wordsInBag(possibleWords, leftover).slice(0,1);
+        // var startsWithThirdWords = thirdWords.filter(function(word) {
+        //     return (word.charAt(6) == secondWord.charAt(14));
+        // });
+        // if (startsWithThirdWords.length == 0)
+        //     return false;
+        // var thirdWordScores = scoreWords(startsWithThirdWords.length > 0?startsWithThirdWords:thirdWords);
+        // thirdWordScores.sort(sortByScore);
+        // thirdWordScores.slice(0,1);
+        // reduceBagLast(thirdWordScores[0].word, leftover);
+        // log("leftover third: " + leftover.join(''));
+
+        log(" " + firstWord + " " + score.score + " : " + secondWordScores[0].word + " " + secondWordScores[0].score);// + " : " + thirdWordScores[0].word + " " + thirdWordScores[0].score);
+        log("Total: " + (score.score + secondWordScores[0].score));// + thirdWordScores[0].score));
+        return true;
     });
 
+    var subwords = findSubWords(firstWord, 0, 0, true, words);
+    log("Subwords of " + firstWord + ":\n" + subwords.map(apm).join('\n'));
+
+    subwords = findSubWords(secondWord, 7, 0, false, words);
+    log("Subwords of " + secondWord + ":\n" + subwords.map(apm).join('\n'));
+
 });
+
+function apm(a) {
+    return "this.addPreferredMove('" + a.word + "'," + a.x + "," + a.y + "," + a.horizontal + ");";
+}
 
