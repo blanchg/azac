@@ -255,6 +255,76 @@ Gordon.prototype.letterOnArc = function(arc, letter) {
     // log('arc: ' + JSON.stringify(arc) + '\n  letter: ' + letter + '\n  chars: ' + chars + '\n==' + result);
     return result;
 };
+
+Gordon.prototype.findPattern = function(pattern) {
+	var arc = this.initialArc();
+	var words = [];
+	this.findPatternArc(pattern, arc, '', words, -1);
+	return words;
+};
+Gordon.prototype.findPatternArc = function(pattern, arc, word, words, pos) {
+	if (!arc)
+		return false;
+	// log('Pattern arc: ' + pattern + ' ' + word + ' ' + pos);
+	var found = false;
+	var reverse = true;
+	var lastLetterIndex = pattern.length - 1;
+	var failed = pattern.split('').some(function(letter,i) {
+		if (i <= pos)
+			return false;
+		var endLetter = i == lastLetterIndex;
+		var secondLetter = i == 1;
+		if (secondLetter) {
+			arc = this.nextArc(arc, this.separator);
+			reverse = false;
+		}
+		// log('letter: ' + letter + ' end ' + endLetter + ' second ' + secondLetter + ' arc ' + JSON.stringify(arc) + ' state ' + JSON.stringify(this.arcState(arc)));
+		if (endLetter) {
+			var separatorArc = this.nextArc(arc, this.separator);
+			if (reverse && separatorArc !== null) {
+				return true;
+			}
+			if (letter == '?') {
+				var chars = this.arcChar(arc);
+				var sepChars = this.arcChar(separatorArc);
+				chars = (chars===null?'':chars) + (sepChars===null?'':sepChars);
+				chars.split('').forEach(function(arcLetter) {
+					words.push(word + arcLetter);
+				}, this);
+			} else if (this.letterOnArc(arc, letter) || this.letterOnArc(separatorArc, letter)) {
+				words.push(word + letter);
+				return true;
+			}
+			return false;
+		} else {
+			var letterArc;
+			if (letter === '?') {
+				var state = this.arcState(arc);
+				// log('Wild so branching: ' + JSON.stringify(state));
+				for (var key in state) {
+					this.findPatternArc(pattern, this.nextArc(arc, key), word + key, words, i);
+				}
+				return true;
+			} else {
+				letterArc = this.nextArc(arc, letter);
+				if (letterArc === null && !secondLetter) {
+					letterArc = this.nextArc(arc, this.separator);
+					if (letterArc !== null) {
+						letterArc = this.nextArc(letterArc, letter);
+					}
+				}
+				if (letterArc === null) {
+					return true
+				}
+				word += letter;
+				arc = letterArc;
+			}
+			return false;
+		}
+	}, this);
+	return words;
+};
+
 Gordon.prototype.findWord = function(word) {
 	var arc = this.initialArc();
 	return this.findWordArc(word, arc);

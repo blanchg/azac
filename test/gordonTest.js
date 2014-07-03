@@ -6,6 +6,77 @@ var JSONR = require('../jsonr.js');
 
 describe('Gordon', function() {
 
+	describe.only('find pattern', function() {
+		it('should find exact word', function() {
+
+			var g = new Gordon();
+			g.addWord('CARE');
+			g.addWord('CARD');
+			g.addWord('CARED');
+			var words = g.findPattern('CARE');
+			words.should.have.length(1);
+			log('Words: ' + words);
+			words[0].should.be.equal('CARE');
+		});
+		it('should find ? at end', function() {
+
+			var g = new Gordon();
+			g.addWord('CARE');
+			g.addWord('CARD');
+			g.addWord('CARED');
+			var words = g.findPattern('CAR?');
+			words.should.have.length(2);
+			log('Words: ' + words);
+			words[1].should.be.equal('CARE');
+			words[0].should.be.equal('CARD');
+		});
+		it('should find 5 letter pattern', function() {
+
+			var g = new Gordon();
+			g.addWord('CARE');
+			g.addWord('CARD');
+			g.addWord('CARED');
+			var words = g.findPattern('?????');
+			words.should.have.length(1);
+			log('Words: ' + words);
+			words[0].should.be.equal('CARED');
+		});
+		it('should find 4 letter pattern', function() {
+
+			var g = new Gordon();
+			g.addWord('CARE');
+			g.addWord('CARD');
+			g.addWord('CARED');
+			var words = g.findPattern('????');
+			words.should.have.length(2);
+			log('Words: ' + words);
+			words[0].should.be.equal('CARD');
+			words[1].should.be.equal('CARE');
+		});
+		it('should find 4 letter pattern end in D', function() {
+
+			var g = new Gordon();
+			g.addWord('CARE');
+			g.addWord('CARD');
+			g.addWord('CARED');
+			var words = g.findPattern('???D');
+			words.should.have.length(1);
+			log('Words: ' + words);
+			words[0].should.be.equal('CARD');
+		});
+		it('should find 4 letter pattern second is R', function() {
+
+			var g = new Gordon();
+			g.addWord('CARE');
+			g.addWord('CRUD');
+			g.addWord('CARED');
+			var words = g.findPattern('?R??');
+			words.should.have.length(1);
+			log('Words: ' + words);
+			words[0].should.be.equal('CRUD');
+		});
+	});
+
 	describe('Paper', function() {
 
 		it('CARE', function() {

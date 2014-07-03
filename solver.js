@@ -81,6 +81,7 @@ Solver.prototype.getAnchors = function(firstWord) {
     var result = [];
     if (firstWord)
     {
+        result.push(new Anchor(7,7,false,true));
         result.push(new Anchor(7,7,true,true));
         // result.push(new Anchor(7,7,false));
     } else {
@@ -122,8 +123,9 @@ Solver.prototype.letterOnArc = function(arc, letter) {
 
 Solver.prototype.rackMinus = function(rack, letter) {
     var index = rack.indexOf(letter);
-    if (index == -1)
+    if (index == -1) {
         return null;
+    }
     if (index == 0)
         return rack.slice(1);
     if (index == rack.length - 1)
@@ -179,6 +181,16 @@ Solver.prototype.gen = function(anchor, pos, result, rack, arc, firstWord, space
     // log(space + ' grid letter: ' + l);
     if (l === null) {
         t = this.template.letter(p.x, p.y);
+        if (t !== undefined) {
+            if (rack.indexOf(t) != -1) {
+                rack = this.rackMinus(rack, t);
+            } else if (rack.indexOf('?') != -1) {
+                rack = this.rackMinus(rack, '?');
+            } else {
+                t = null;
+            }
+        }
+
     }
     if (t !== null) {
         var nextArc = this.nextArc(arc, t);
@@ -235,7 +247,11 @@ Solver.prototype.recordPlay = function(word, anchor, pos, rack, firstWord) {
     if (score == -1) {
         return;
     }
-    // log('record...' + p.x + ',' + p.y + (p.horizontal?'h ':'v ') + word);
+    // if (word == 'ADROIT') {
+    //     log('record...' + p.x + ',' + p.y + (p.horizontal?'h ':'v ') + word);
+    //     log('Template: ' + this.template.letter(p.x, p.y));
+    //     log('Rack: ' + rack);
+    // }
     this.results.push(new Result(null, null, word, p.x, p.y, p.horizontal, score, rack));
     // result. = '';
 };
@@ -330,18 +346,18 @@ Solver.prototype.processQuery = function(query) {
 
     this.results = [];
 
-    this.preferredMoves.forEach(function (move) {
-        var rack = this.rack.slice(0);
-        if (!this.testPreferredMove(move, rack))
-            return;
-        // it works so just need to score and fix the rack
-        var anchor = new Anchor(a.col, a.row, a.horizontal);
-        this.recordPlay(a.word, anchor, 0, rack, firstWord)
-    }, this);
+    // this.preferredMoves.forEach(function (move) {
+    //     var rack = this.rack.slice(0);
+    //     if (!this.testPreferredMove(move, rack))
+    //         return;
+    //     // it works so just need to score and fix the rack
+    //     var anchor = new Anchor(a.col, a.row, a.horizontal);
+    //     this.recordPlay(a.word, anchor, 0, rack, firstWord)
+    // }, this);
 
-    if (this.results.length != 0) {
-        log("PLAYING PREFERRED MOVES! " + this.results.length);
-    }
+    // if (this.results.length != 0) {
+    //     log("PLAYING PREFERRED MOVES! " + this.results.length);
+    // }
 
     if (this.results.length == 0) {
 
@@ -357,10 +373,6 @@ Solver.prototype.processQuery = function(query) {
     }
 
     this.results.sort(function(a,b){
-        if (a.score > b.score)
-            return 1;
-        else if (a.score < b.score)
-            return -1;
         var al = a.word.length;
         var bl = b.word.length;
         if (al < bl)
@@ -368,8 +380,14 @@ Solver.prototype.processQuery = function(query) {
         else if (al > bl)
             return 1;
 
+        if (a.score > b.score)
+            return 1;
+        else if (a.score < b.score)
+            return -1;
         return 0;
     });
+
+
     // log("Results: " + this.results.join('\n'));
     // log("Found " + this.results.length + " words");
     // this.results = this.results.unique();
@@ -446,8 +464,8 @@ Solver.prototype.processResults = function(bestFinalState, i, state, results, q)
             var rackScore = this.grid.scoreWord(state.rack.join(''));
             state.finalScore = (state.totalScore - bagScore - rackScore);
 
-            if (i > 1000) {
                 this.totalBoards++;
+            if (i > 1000) {
                 log("Total Score: " + state.totalScore  + 
                     " bagScore: -" + bagScore + 
                     " rackScore: -" + rackScore + 
@@ -467,7 +485,7 @@ Solver.prototype.processResults = function(bestFinalState, i, state, results, q)
                 bestFinalState.copy(state);
                 this.saveProgress(state.grid, state.foundWords);
                 state.grid.print();
-                log('Result\n' + this.problem + ':\n' + state.foundWords.map(function(f) {return f.join(' ');}).join(',\n'));
+                log('Result\n' + this.problem + ': ' + state.foundWords.map(function(f) {return f.join(' ');}).join(','));
                 log("Total Score: " + state.totalScore  + 
                     " bagScore: -" + bagScore + 
                     " rackScore: -" + rackScore + 
@@ -476,6 +494,7 @@ Solver.prototype.processResults = function(bestFinalState, i, state, results, q)
                     "  " + (this.percentDone * 100) + "%" +
                     " Depth: " + state.depth +
                     " Boards: " + this.totalBoards + "k");
+                // process.exit();
             }
             // endStates.push(state);
         }
@@ -573,7 +592,7 @@ Solver.prototype.processAll = function() {
     this.addTarget("OXYPHENBUTAZONE", 0, 0, true, this.rack);
     this.addPreferredMove('OX',0,0,true);
     this.addPreferredMove('OXY',0,0,true);
-    // this.addPreferredMove('OXYPHENBUTAZONE',0,0,true);
+    this.addPreferredMove('OXYPHENBUTAZONE',0,0,true);
     this.addPreferredMove('HE',4,0,true);
     this.addPreferredMove('HEN',4,0,true);
     this.addPreferredMove('EN',5,0,true);
@@ -601,18 +620,21 @@ Solver.prototype.processAll = function() {
     // this.addTarget("BENZODIAZEPINES", 7, 0, false, this.rack);
 
     // this.addPreferredMove('BE',7,0,false);
-    // this.addPreferredMove('BE',7,0,false);
-    // this.addPreferredMove('BENZODIAZEPINE',7,0,false);
-    // this.addPreferredMove('BENZODIAZEPINE',7,0,false);
+    // // this.addPreferredMove('BE',7,0,false);
+    // // this.addPreferredMove('BENZODIAZEPINE',7,0,false);
+    // // this.addPreferredMove('BENZODIAZEPINE',7,0,false);
     // this.addPreferredMove('EN',7,1,false);
     // this.addPreferredMove('OD',7,4,false);
     // this.addPreferredMove('PI',7,10,false);
-    // this.addPreferredMove('PIN',7,10,false);
-    // this.addPreferredMove('PINE',7,10,false);
-    // this.addPreferredMove('PINES',7,10,false);
+    // // this.addPreferredMove('PIN',7,10,false);
+    // // this.addPreferredMove('PINE',7,10,false);
+    // // this.addPreferredMove('PINES',7,10,false);
     // this.addPreferredMove('IN',7,11,false);
     // this.addPreferredMove('NE',7,12,false);
     // this.addPreferredMove('ES',7,13,false);
+
+    log('Aiming for:');
+    this.template.print();
 
     var states = [searchState];
     // var states = this.placeWord(searchState, bestFinalState, "BENZODIAZEPINES", 7, 0, false, this.rack);
