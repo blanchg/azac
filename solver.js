@@ -1,4 +1,3 @@
-
 var Grid = require('./grid.js').Grid;
 var log = require('./util.js').log;
 var fs = require('fs');
