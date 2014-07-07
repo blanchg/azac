@@ -46,14 +46,14 @@ Result.prototype.toString = function() {
 
 Solver.prototype.saveProgress = function(grid, foundWords) {
 
-    log('Saving the progress for later');
-    console.time('write');
+    // log('Saving the progress for later');
+    // console.time('write');
     var output = '\n';
     grid.print(function(data) { output += data + '\n';});
 
-    output += 'Result\n' + this.problem + ':\n' + foundWords.map(function(f) {return f.join(' ');}).join(',\n');
+    output += '\n' + this.problem + ':\n' + foundWords.map(function(f) {return f.join(' ');}).join(',\n');
     fs.writeFileSync(this.problem + '.log', output, {encoding:'utf8'});
-    console.timeEnd('write');
+    // console.timeEnd('write');
 }
 
 var Anchor = function(x,y,horizontal,lookLeft) {
@@ -241,7 +241,7 @@ Solver.prototype.gen = function(anchor, pos, result, rack, arc, firstWord, space
                 availableLetters[letter]--;
                 var nextArc = this.nextArc(arc, letter);
                 // log(space + 'l: ' + letter);
-                this.goOn(anchor, pos, letter, result, this.rackMinus(rack, letter), nextArc, arc, firstWord, space, this.clone(availableLetters));
+                this.goOn(anchor, pos, letter, result, this.rackMinus(rack, letter), nextArc, arc, firstWord, space, availableLetters);
             }
         }, this);
     }
@@ -489,7 +489,7 @@ Solver.prototype.processResults = function(bestFinalState, i, state, results, q)
                 this.totalBoards++;
             if (i > 2) {
                 state.grid.print();
-                log('Result\n' + this.problem + ': ' + state.foundWords.map(function(f) {return f.join(' ');}).join(','));
+                log(this.problem + ': ' + state.foundWords.map(function(f) {return f.join(' ');}).join(','));
                 log("Total Score: " + state.totalScore  + 
                     " bagScore: -" + bagScore + 
                     " rackScore: -" + rackScore + 
@@ -498,7 +498,8 @@ Solver.prototype.processResults = function(bestFinalState, i, state, results, q)
                     "  " + (this.percentDone * 100) + "%" +
                     " Depth: " + state.depth +
                     " Boards: " + (this.totalBoards) + 
-                    " / " + ((this.totalBoards)/this.percentDone).toFixed(0));
+                    " / " + ((this.totalBoards)/this.percentDone).toFixed(0) +
+                    "\n");
                 log(state.foundWords.map(function(f) {return f[1]}).join(','));
                 console.timeEnd('1000 Queries');
                 i = 0;
@@ -509,7 +510,7 @@ Solver.prototype.processResults = function(bestFinalState, i, state, results, q)
                 bestFinalState.copy(state);
                 this.saveProgress(state.grid, state.foundWords);
                 state.grid.print();
-                log('Result\n' + this.problem + ': ' + state.foundWords.map(function(f) {return f.join(' ');}).join(','));
+                log(this.problem + ': ' + state.foundWords.map(function(f) {return f.join(' ');}).join(','));
                 log("Total Score: " + state.totalScore  + 
                     " bagScore: -" + bagScore + 
                     " rackScore: -" + rackScore + 
@@ -517,7 +518,8 @@ Solver.prototype.processResults = function(bestFinalState, i, state, results, q)
                     " / " + bestFinalState.finalScore +
                     "  " + (this.percentDone * 100) + "%" +
                     " Depth: " + state.depth +
-                    " Boards: " + this.totalBoards + "k");
+                    " Boards: " + this.totalBoards +
+                    "\n");
                 // process.exit();
             }
             // endStates.push(state);
@@ -527,9 +529,9 @@ Solver.prototype.processResults = function(bestFinalState, i, state, results, q)
         var percentWork = state.percentWork / results.length;
         
         results.forEach(function(result, k) {
-            // log('From word: ' + result.word + ' ' + result.score);
+            log('From word: ' + result.word + ' ' + result.score);
             var newState = new SearchState(state.problem, new Grid(q.grid), q.bag, result.rack, false, percentWork, state.depth + 1, q.availableLetters);
-            // log("Next state: " + newState.rack + ' and bag ' + newState.bag);
+            log("Next state: " + newState.rack + ' and bag ' + newState.bag);
             newState.totalScore = state.totalScore + result.score;
             newState.foundWords = state.foundWords.slice(0);
             var position = this.ROWS[result.row] + this.COLUMNS[result.col];
@@ -616,7 +618,7 @@ Solver.prototype.processAll = function() {
 
     this.reservedLetters = {};
     this.bagLetters = {'?':0};
-    this.availableLetters = {};
+    this.availableLetters = {'?':0};
     this.alphabet.forEach(function(letter){
         this.reservedLetters[letter] = 0;
         this.bagLetters[letter] = 0;
@@ -654,7 +656,13 @@ Solver.prototype.processAll = function() {
         }
     },this);
 
-    log("Needed " + wilds + " wilds and have " + this.bagLetters['?']);
+    this.reservedLetters['?'] = wilds;
+    this.availableLetters['?'] = this.bagLetters['?'] - wilds;
+    var letter = '?';
+    log(' ' + letter + ': ' + this.reservedLetters[letter] + ' / ' + this.bagLetters[letter] + ' = ' + this.availableLetters[letter]);
+
+    if (this.availableLetters['?'] < 0)
+        log("FAILED needed " + wilds + " wilds and have " + this.bagLetters['?']);
 
     // this.addTarget("BENZODIAZEPINES", 7, 0, false, this.rack);
 
