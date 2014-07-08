@@ -254,46 +254,46 @@ describe('Solver', function() {
 		it("find first target", function() {
 
 			solver.lexicon = new Gordon();
-			solver.lexicon.addWord('OXYPHENBUTAZONE');
-			solver.lexicon.addWord('ET');
-			solver.lexicon.addWord('ETA');
-			solver.lexicon.addWord('TA');
-			solver.lexicon.addWord('TAT');
-			solver.lexicon.addWord('AT');
-			solver.lexicon.addWord('NE');
-			solver.lexicon.addWord('HE');
-			solver.lexicon.addWord('NA');
-			solver.lexicon.addWord('UT');
-			solver.lexicon.addWord('ON');
-			solver.lexicon.addWord('UTA');
-			solver.lexicon.addWord('NAE');
-			solver.lexicon.addWord('ETE');
-			solver.lexicon.addWord('ONE');
-			solver.lexicon.addWord('ATE');
-			solver.lexicon.addWord('HEN');
-			solver.lexicon.addWord('ON');
-			solver.lexicon.addWord('UTA');
+			// solver.lexicon.addWord('OXYPHENBUTAZONE');
+			// solver.lexicon.addWord('ET');
+			// solver.lexicon.addWord('ETA');
+			// solver.lexicon.addWord('TA');
+			// solver.lexicon.addWord('TAT');
+			// solver.lexicon.addWord('AT');
+			// solver.lexicon.addWord('NE');
+			// solver.lexicon.addWord('HE');
+			// solver.lexicon.addWord('NA');
+			// solver.lexicon.addWord('UT');
+			// solver.lexicon.addWord('ON');
+			// solver.lexicon.addWord('UTA');
+			// solver.lexicon.addWord('NAE');
+			// solver.lexicon.addWord('ETE');
+			// solver.lexicon.addWord('ONE');
+			// solver.lexicon.addWord('ATE');
+			// solver.lexicon.addWord('HEN');
+			// solver.lexicon.addWord('ON');
+			// solver.lexicon.addWord('UTA');
 			solver.lexicon.addWord('TAILED');
 
-			solver.setBag('TAILEDATTATEETAETEONEEHENNUTAOXYPBZE'.split(''));
+			solver.setBag('TAILED'.split('')); // ATTATEETAETEONEEHENNUTAOXYPBZE
 
-	    	solver.addPreferredMove("OXYPHENBUTAZONE", 0, 0, true);
+	    	// solver.addPreferredMove("OXYPHENBUTAZONE", 0, 0, true);
 	        solver.addPreferredMove('ET',4,1,true);
-	        solver.addPreferredMove('ETA',4,1,true);
-	        solver.addPreferredMove('TA',5,1,true);
-	        solver.addPreferredMove('TA',8,1,true);
-	        solver.addPreferredMove('TAT',8,1,true);
-	        solver.addPreferredMove('AT',9,1,true);
-	        solver.addPreferredMove('NE',12,1,true);
+	     //    solver.addPreferredMove('ETA',4,1,true);
+	     //    solver.addPreferredMove('TA',5,1,true);
+	     //    solver.addPreferredMove('TA',8,1,true);
+	     //    solver.addPreferredMove('TAT',8,1,true);
+	     //    solver.addPreferredMove('AT',9,1,true);
+	     //    solver.addPreferredMove('NE',12,1,true);
 
-	        solver.addPreferredMove('HE',4,0,false);
-	        solver.addPreferredMove('ET',5,0,false);
-	        solver.addPreferredMove('NA',6,0,false);
-	        solver.addPreferredMove('UT',8,0,false);
-	        solver.addPreferredMove('TA',9,0,false);
-	        solver.addPreferredMove('AT',10,0,false);
-	        solver.addPreferredMove('ON',12,0,false);
-	        solver.addPreferredMove('NE',13,0,false);
+	     //    solver.addPreferredMove('HE',4,0,false);
+	     //    solver.addPreferredMove('ET',5,0,false);
+	     //    solver.addPreferredMove('NA',6,0,false);
+	     //    solver.addPreferredMove('UT',8,0,false);
+	     //    solver.addPreferredMove('TA',9,0,false);
+	     //    solver.addPreferredMove('AT',10,0,false);
+	     //    solver.addPreferredMove('ON',12,0,false);
+	     //    solver.addPreferredMove('NE',13,0,false);
 
 			solver.grid.lexicon = solver.lexicon;
 
@@ -317,7 +317,7 @@ describe('Solver', function() {
 
 			// solver.grid.print();
 
-			solver.search();
+			solver.processAll();
 
 		});
 

@@ -20,7 +20,7 @@ var Solver = function() {
     this.bag = [];
     this.problem = '?';
     this.preferredMoves = [];
-    
+
     this.percentDone = 0;
     this.totalBoards = 0;
     this.reservedLetters = {};
@@ -510,7 +510,7 @@ Solver.prototype.processResults = function(bestFinalState, i, state, results, q)
             state.finalScore = (state.totalScore - bagScore - rackScore);
 
             this.totalBoards++;
-            if (i == 0) {
+            // if (i == 0) {
                 state.grid.print();
                 var elapsed = Date.now() - beginning;
                 var remainingTime = ((elapsed / this.percentDone) - elapsed)/1000/60;
@@ -529,7 +529,7 @@ Solver.prototype.processResults = function(bestFinalState, i, state, results, q)
                 // log(state.foundWords.map(function(f) {return f[1]}).join(','));
                 console.timeEnd('1000 Queries');
                 console.time('1000 Queries');
-            }
+            // }
 
             if (state.finalScore > bestFinalState.finalScore) {
                 bestFinalState.copy(state);
@@ -660,36 +660,35 @@ Solver.prototype.haveAvailableLetters = function() {
 Solver.prototype.processAll = function() {
 
     // this.grid.print();
-    this.grid.lexicon = this.lexicon;
 
-    if (this.grid.lexicon.findWord('TE')) {
-        log('ERROR can find word TE!');
-        return;
-    }
-    if (this.grid.lexicon.findWord('EASOZ')) {
-        log('ERROR can find word EASOZ!');
-        return;
-    }
-
+    // if (this.grid.lexicon.findWord('TE')) {
+    //     log('ERROR can find word TE!');
+    //     return;
+    // }
+    // if (this.grid.lexicon.findWord('EASOZ')) {
+    //     log('ERROR can find word EASOZ!');
+    //     return;
+    // }
 
 
-    this.addPreferredMove("OXYPHENBUTAZONE", 0, 0, true);
-    this.addPreferredMove('ET',4,1,true);
-    this.addPreferredMove('ETA',4,1,true);
-    this.addPreferredMove('TA',5,1,true);
-    this.addPreferredMove('TA',8,1,true);
-    this.addPreferredMove('TAT',8,1,true);
-    this.addPreferredMove('AT',9,1,true);
-    this.addPreferredMove('NE',12,1,true);
 
-    this.addPreferredMove('HE',4,0,false);
-    this.addPreferredMove('ET',5,0,false);
-    this.addPreferredMove('NA',6,0,false);
-    this.addPreferredMove('UT',8,0,false);
-    this.addPreferredMove('TA',9,0,false);
-    this.addPreferredMove('AT',10,0,false);
-    this.addPreferredMove('ON',12,0,false);
-    this.addPreferredMove('NE',13,0,false);
+    // this.addPreferredMove("OXYPHENBUTAZONE", 0, 0, true);
+    // this.addPreferredMove('ET',4,1,true);
+    // this.addPreferredMove('ETA',4,1,true);
+    // this.addPreferredMove('TA',5,1,true);
+    // this.addPreferredMove('TA',8,1,true);
+    // this.addPreferredMove('TAT',8,1,true);
+    // this.addPreferredMove('AT',9,1,true);
+    // this.addPreferredMove('NE',12,1,true);
+
+    // this.addPreferredMove('HE',4,0,false);
+    // this.addPreferredMove('ET',5,0,false);
+    // this.addPreferredMove('NA',6,0,false);
+    // this.addPreferredMove('UT',8,0,false);
+    // this.addPreferredMove('TA',9,0,false);
+    // this.addPreferredMove('AT',10,0,false);
+    // this.addPreferredMove('ON',12,0,false);
+    // this.addPreferredMove('NE',13,0,false);
 
 
     // this.addTarget("BENZODIAZEPINES", 7, 0, false, this.rack);
@@ -708,18 +707,13 @@ Solver.prototype.processAll = function() {
     // this.addPreferredMove('NE',7,12,false);
     // this.addPreferredMove('ES',7,13,false);
 
-    log('Aiming for:');
-    this.template.print();
+    // log('Aiming for:');
+    // this.template.print();
 
     if (!this.haveAvailableLetters())
         process.exit(1);
 
-    search();
-
-};
-
-Solver.prototype.search = function() {
-    
+    this.grid.lexicon = this.lexicon;
     var bestFinalState = new SearchState();
     bestFinalState.finalScore = -300;
     var searchState = new SearchState(this.problem, this.grid, this.bag, this.rack, true, 1, 0, this.availableLetters);
