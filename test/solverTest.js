@@ -248,5 +248,79 @@ describe('Solver', function() {
 
 		});
 	});
+	
+	describe.only("target words", function() {
+
+		it("find first target", function() {
+
+			solver.lexicon = new Gordon();
+			solver.lexicon.addWord('OXYPHENBUTAZONE');
+			solver.lexicon.addWord('ET');
+			solver.lexicon.addWord('ETA');
+			solver.lexicon.addWord('TA');
+			solver.lexicon.addWord('TAT');
+			solver.lexicon.addWord('AT');
+			solver.lexicon.addWord('NE');
+			solver.lexicon.addWord('HE');
+			solver.lexicon.addWord('NA');
+			solver.lexicon.addWord('UT');
+			solver.lexicon.addWord('ON');
+			solver.lexicon.addWord('UTA');
+			solver.lexicon.addWord('NAE');
+			solver.lexicon.addWord('ETE');
+			solver.lexicon.addWord('ONE');
+			solver.lexicon.addWord('ATE');
+			solver.lexicon.addWord('HEN');
+			solver.lexicon.addWord('ON');
+			solver.lexicon.addWord('UTA');
+			solver.lexicon.addWord('TAILED');
+
+			solver.setBag('TAILEDATTATEETAETEONEEHENNUTAOXYPBZE'.split(''));
+
+	    	solver.addPreferredMove("OXYPHENBUTAZONE", 0, 0, true);
+	        solver.addPreferredMove('ET',4,1,true);
+	        solver.addPreferredMove('ETA',4,1,true);
+	        solver.addPreferredMove('TA',5,1,true);
+	        solver.addPreferredMove('TA',8,1,true);
+	        solver.addPreferredMove('TAT',8,1,true);
+	        solver.addPreferredMove('AT',9,1,true);
+	        solver.addPreferredMove('NE',12,1,true);
+
+	        solver.addPreferredMove('HE',4,0,false);
+	        solver.addPreferredMove('ET',5,0,false);
+	        solver.addPreferredMove('NA',6,0,false);
+	        solver.addPreferredMove('UT',8,0,false);
+	        solver.addPreferredMove('TA',9,0,false);
+	        solver.addPreferredMove('AT',10,0,false);
+	        solver.addPreferredMove('ON',12,0,false);
+	        solver.addPreferredMove('NE',13,0,false);
+
+			solver.grid.lexicon = solver.lexicon;
+
+			solver.haveAvailableLetters().should.be.ok;
+
+		    log('Aiming for:');
+		    solver.template.print();
+		    solver.problem = '1';
+
+		    var rack = [];
+		    solver.fillRack(rack, solver.bag);
+		    log('Rack: ' + rack);
+
+		 //    var A = Solver.prototype.Anchor;
+			// solver.results = [];
+			// solver.wordDict = {};
+		 //    var anchor = new A(7,7,false,true);
+		 //    solver.gen(anchor, 0, "", rack.slice(0), solver.grid.lexicon.initialArc(), true, '', solver.clone(solver.availableLetters));
+		 //    log('Results: ' + solver.results.join('\n'));
+			// solver.grid.addWord('TAILED', 7, 2, false);
+
+			// solver.grid.print();
+
+			solver.search();
+
+		});
+
+	});
 
 });
