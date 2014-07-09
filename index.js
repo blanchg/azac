@@ -57,8 +57,15 @@ if (process.argv.length > 2) {
 var loader = new LexiconLoader();
 loader.load((function(lexicon) {
     var solver = new Solver();
-    solver.bag = bag;
+    solver.setBag(bag);
     solver.problem = problem;
-    solver.lexicon = lexicon
+    solver.lexicon = lexicon;
+    solver.addPreferredMove('BBB',8,6,false);
+    solver.addPreferredMove('HEN',4,0,true);
+    solver.addPreferredMove('UTA',8,0,true);
+    solver.addPreferredMove('ON',12,0,true);
+    solver.addPreferredMove("OXYPHENBUTAZONE", 0, 0, true);
+    log("Aiming for:");
+    solver.template.print();
     solver.processAll();
 }).bind(this));

@@ -7,12 +7,15 @@ var Combinatorics = require('js-combinatorics').Combinatorics;
 
 var beginning = Date.now();
 
+var COLUMNS = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ'.split('');
+var ROWS = [1,2,3,4,5,6,7,8,9,10,11,12,13,14,15];
+
 var Solver = function() {
     this.rack = [];
     this.alphabet = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ'.split('');
     this.lowerAlphabet = 'abcdefghijklmnopqrstuvwxyz'.split('');
-    this.COLUMNS = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ'.split('');
-    this.ROWS = [1,2,3,4,5,6,7,8,9,10,11,12,13,14,15];
+    this.COLUMNS = COLUMNS;
+    this.ROWS = ROWS;
     this.scores = '1,3,3,2,1,4,2,4,1,8,5,1,3,1,1,3,10,1,1,1,1,4,4,8,4,10'.split(',').map(function(item){return parseInt(item)});
     this.grid = new Grid(15);
     this.template = new Grid(15);
@@ -55,7 +58,7 @@ var Result = function(replacements, hook, word, col, row, horizontal, score, rac
 }
 
 Result.prototype.toString = function() {
-    return this.word + '[' + this.col + ', ' + this.row + ']';
+    return this.word + '[' + COLUMNS[this.col] + ',' + ROWS[this.row] + ']' + (this.horizontal?'h':'v') + ':' + this.score;
 };
 
 Solver.prototype.saveProgress = function(grid, foundWords) {
@@ -134,7 +137,18 @@ Solver.prototype.letterOnArc = function(arc, letter) {
     return this.grid.lexicon.letterOnArc(arc, letter);
 };
 
+Solver.prototype.removeFromRack = function(rack, letter) {
+    var last = rack.length - 1;
+    var index = rack.indexOf(letter);
+    if (index == -1)
+        return false;
+    rack[index] = rack[last];
+    rack.length = last;
+    return true;
+};
+
 Solver.prototype.rackMinus = function(rack, letter) {
+
     var index = rack.indexOf(letter);
     if (index == -1) {
         return null;
@@ -265,17 +279,18 @@ Solver.prototype.recordPlay = function(word, anchor, pos, rack, firstWord, avail
     }
     this.wordDict[key] = true;
     var score = this.grid.validateMove(word, p.x, p.y, p.horizontal, firstWord, this.rack.length - rack.length);
-    // log('located at ' + p.x + ', ' + p.y + ' ' + key + ' = ' + score);
-    // log('Score: ' + score + ' firstHstWord ' + firstWord);
+    // log('Score: ' + score + ' firstWord ' + firstWord);
     if (score == -1) {
         return;
     }
+    // log('Record: ' + word + ' at ' + p.x + ', ' + p.y + ' ' + key + ' = ' + score);
     // if (word == 'ADROIT') {
     //     log('record...' + p.x + ',' + p.y + (p.horizontal?'h ':'v ') + word);
     //     log('Template: ' + this.template.letter(p.x, p.y));
     //     log('Rack: ' + rack);
     // }
     this.results.push(new Result(null, null, word, p.x, p.y, p.horizontal, score, rack, this.clone(availableLetters)));
+    // log('results after: ' + this.results.length);
     // result. = '';
 };
 
@@ -368,27 +383,41 @@ Solver.prototype.processQuery = function(query) {
     // log('bag: ' + this.bag.join(''));
     
     // var result = new Result(null, null, null, 0, 0, true, 0);
-
+    // log("");
+    // log("");
+    // log('RESET RESULTS!!!!');
+    // log("");
+    // log("");
     this.results = [];
+    this.wordDict = {};
 
     this.preferredMoves.forEach(function (move) {
         var rack = this.rack.slice(0);
-        if (!this.testPreferredMove(move, rack))
+        // log("Test preferred: " + move.word + " " + COLUMNS[move.col] + "," + ROWS[move.row] + (move.horizontal?'h':'v'));
+        if (!this.testPreferredMove(move, rack)) {
             return;
+        }
         // it works so just need to score and fix the rack
         var anchor = new Anchor(move.col, move.row, move.horizontal);
+        // rack = this.rackMinus(rack, move.word);
         this.recordPlay(move.word, anchor, 0, rack, firstWord, query.availableLetters);
+        // log('foreach results: ' + this.results.length);
     }, this);
 
-    if (this.results.length != 0) {
-        log("PLAYING PREFERRED MOVES! " + this.results.length);
-    }
+    // log("");
+    // log("");
+    // log("RESULTS: " + this.results.length);
+    // log("");
+    // log("");
 
-    if (this.results.length == 0) {
+    if (this.results.length != 0) {
+        log("PLAYING PREFERRED MOVES! " + this.results);
+        // process.exit();
+    } else {
+        this.wordDict = {};
 
         var anchors = this.getAnchors(firstWord);
 
-        this.wordDict = {};
         // log('Found: ' + anchors.length + ' anchors');
         anchors.forEach(function (anchor, i) {
             // log(i);
@@ -399,13 +428,13 @@ Solver.prototype.processQuery = function(query) {
 
     this.results.sort(function(a,b){
         if (a.row < b.row)
-            return -1;
+            return 1;
         if (b.row < a.row)
-            return 1;
-        if (a.col < b.col)
             return -1;
-        if (b.col < a.col)
+        if (a.col < b.col)
             return 1;
+        if (b.col < a.col)
+            return -1;
         return 0;
 
         // var al = a.word.length;
@@ -423,7 +452,7 @@ Solver.prototype.processQuery = function(query) {
     });
 
 
-    log("Results: " + this.results.join('\n'));
+    // log("Results: " + this.results.join('\n'));
     // log("Found " + this.results.length + " words");
     // this.results = this.results.unique();
     // log("Found " + this.results.length + " unique words");
@@ -469,18 +498,18 @@ Solver.prototype.processState = function(states, bestFinalState, i) {
     var state = states.pop();
     var results = null;
     var q = null;
-
+    // log("Bag: " + state.bag.length);
+    // log("Rack: " + state.rack.length);
     if (state.bag.length > 0 || state.rack.length > 0)
     {
         q = new Query(state.rack, state.bag, state.grid, state.firstWord, state.availableLetters);
         results = this.processQuery(q);
     }
 
-
     i++;
 
     // log("Results: " + results.length);
-    // if (i > 100)
+    // if (i > 50)
         i = 0;
 
     var newStates = this.processResults(bestFinalState, i, state, results, q);
@@ -493,6 +522,8 @@ Solver.prototype.processState = function(states, bestFinalState, i) {
 
     if (states.length > 0)
         setImmediate(this.processState.bind(this), states, bestFinalState, i);
+    else if (this.done !== undefined)
+        this.done(results);
 }
 
 Solver.prototype.processResults = function(bestFinalState, i, state, results, q) {
@@ -510,7 +541,21 @@ Solver.prototype.processResults = function(bestFinalState, i, state, results, q)
             state.finalScore = (state.totalScore - bagScore - rackScore);
 
             this.totalBoards++;
+            var showResult = i == 0;
             // if (i == 0) {
+                
+                // log(state.foundWords.map(function(f) {return f[1]}).join(','));
+                // console.timeEnd('1000 Queries');
+                // console.time('1000 Queries');
+            // }
+
+            if (state.finalScore > bestFinalState.finalScore) {
+                bestFinalState.copy(state);
+                this.saveProgress(state.grid, state.foundWords);
+                showResult = true;
+            }
+
+            if (showResult) {
                 state.grid.print();
                 var elapsed = Date.now() - beginning;
                 var remainingTime = ((elapsed / this.percentDone) - elapsed)/1000/60;
@@ -526,26 +571,6 @@ Solver.prototype.processResults = function(bestFinalState, i, state, results, q)
                     " / " + ((this.totalBoards)/this.percentDone).toFixed(0) +
                     " time " + (remainingTime).toFixed(2) + "min" +
                     "\n");
-                // log(state.foundWords.map(function(f) {return f[1]}).join(','));
-                console.timeEnd('1000 Queries');
-                console.time('1000 Queries');
-            // }
-
-            if (state.finalScore > bestFinalState.finalScore) {
-                bestFinalState.copy(state);
-                this.saveProgress(state.grid, state.foundWords);
-                state.grid.print();
-                log(this.problem + ': ' + state.foundWords.map(function(f) {return f.join(' ');}).join(','));
-                log("Total Score: " + state.totalScore  + 
-                    " bagScore: -" + bagScore + 
-                    " rackScore: -" + rackScore + 
-                    " Final Score: " + state.finalScore +
-                    " / " + bestFinalState.finalScore +
-                    "  " + (this.percentDone * 100) + "%" +
-                    " Depth: " + state.depth +
-                    " Boards: " + this.totalBoards +
-                    "\n");
-                // process.exit();
             }
             // endStates.push(state);
         }
@@ -554,7 +579,7 @@ Solver.prototype.processResults = function(bestFinalState, i, state, results, q)
         var percentWork = state.percentWork / results.length;
         
         results.forEach(function(result, k) {
-            // log(state.depth + ' Result: ' + result.word);
+            // log(state.depth + ' Result: ' + result);
             var newState = new SearchState(state.problem, new Grid(q.grid), q.bag, result.rack, false, percentWork, state.depth + 1, result.availableLetters);
             // log(state.depth + ' From word: ' + result.word + ' ' + result.score + " Next state: " + newState.rack + ' and bag ' + newState.bag);
             newState.totalScore = state.totalScore + result.score;
@@ -566,7 +591,9 @@ Solver.prototype.processResults = function(bestFinalState, i, state, results, q)
             newState.foundWords.push([position, result.word, result.score]);
             newState.grid.addWord(result.word, result.col, result.row, result.horizontal);
             states.push(newState);
+            newState.grid.print();
             // return false;//c > 1;
+            process.exit();
         }, this);
     }
 
@@ -575,29 +602,37 @@ Solver.prototype.processResults = function(bestFinalState, i, state, results, q)
 
 Solver.prototype.testPreferredMove = function(move, rack) {
     var word = move.word;
-    var anchor = new Anchor(move.col, move.row, move.horizontal, false);
-    var pos = 0;
-    if (!this.grid.beforeEmpty(move.col, move.row, move.horizontal))
-        return false;
+    var anchor = new Anchor(move.col, move.row, move.horizontal);
+    // if (!this.grid.beforeEmpty(move.col, move.row, move.horizontal)) {
+    //     // log("! before empty")
+    //     return false;
+    // }
     // Has the letters in the rack
-    var failed = word.split('').some(function(letter) {
-        pos++;
-        if (this.rack.indexOf(letter) == -1) {
-            if (this.rack.indexOf('?') == -1) {
+
+    // log(word + ' : ' + rack);
+    var failed = word.split('').some(function(letter, i) {
+        var pos = anchor.move(i);
+        if (this.grid.rawCell(pos.x, pos.y) === letter)
+            return false;
+        if (rack.indexOf(letter) == -1) {
+            if (!this.removeFromRack(rack, '?')) {
                 return true;
-            } else {
-                this.rackMinus(rack, '?');
             }
         } else {
-            this.rackMinus(rack, letter);
+            this.removeFromRack(rack, letter);
         }
         return false;
     }, this);
-    if (failed)
+    if (failed) {
+        // log('rack doesn\'t have letters');
         return false;
-    var last = anchor.move(pos);
-    if (!this.grid.afterEmpty(anchor.x, anchor.y, anchor.horizontal))
-        return false;
+    }
+    // if (!this.grid.afterEmpty(word, move.col, move.row, move.horizontal)) {
+    //     // log('! after empty');
+    //     return false;
+    // }
+
+    return true;
 };
 
 Solver.prototype.addPreferredMove = function(word, col, row, horizontal) {
@@ -626,6 +661,7 @@ Solver.prototype.addPreferredMove = function(word, col, row, horizontal) {
 }
 
 Solver.prototype.setBag = function(bag) {
+    // log("Setting bag to: " + bag);
     this.bag = bag;
 
     this.bag.forEach(function(letter){
@@ -657,7 +693,10 @@ Solver.prototype.haveAvailableLetters = function() {
     return true;
 };
 
-Solver.prototype.processAll = function() {
+Solver.prototype.processAll = function(done) {
+    this.done = done;
+
+    log('Process bag: ' + this.bag);
 
     // this.grid.print();
 
