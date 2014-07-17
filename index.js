@@ -60,11 +60,25 @@ loader.load((function(lexicon) {
     solver.setBag(bag);
     solver.problem = problem;
     solver.lexicon = lexicon;
-    solver.addPreferredMove('BBB',8,6,false);
+    // solver.addPreferredMove('BBB',8,6,false);
     solver.addPreferredMove('HEN',4,0,true);
     solver.addPreferredMove('UTA',8,0,true);
     solver.addPreferredMove('ON',12,0,true);
     solver.addPreferredMove("OXYPHENBUTAZONE", 0, 0, true);
+
+    // solver.addPreferredMove('BE',7,0,false);
+    // solver.addPreferredMove('EN',7,1,false);
+    // solver.addPreferredMove('OD',7,4,false);
+    // solver.addPreferredMove('PI',7,10,false);
+    // solver.addPreferredMove('PIN',7,10,false);
+    // solver.addPreferredMove('PINE',7,10,false);
+    // solver.addPreferredMove('PINES',7,10,false);
+    // solver.addPreferredMove('IN',7,11,false);
+    // solver.addPreferredMove('NE',7,12,false);
+    // solver.addPreferredMove('ES',7,13,false);
+    // solver.addPreferredMove('BENZODIAZEPINE',7,0,false);
+    // solver.addPreferredMove("BENZODIAZEPINES", 7, 0, false);
+
     log("Aiming for:");
     solver.template.print();
     solver.processAll();

@@ -97,6 +97,7 @@ Solver.prototype.getAnchors = function(firstWord) {
     var result = [];
     if (firstWord)
     {
+        // TODO both and true
         result.push(new Anchor(7,7,false,true));
         result.push(new Anchor(7,7,true,true));
         // result.push(new Anchor(7,7,false));
@@ -191,11 +192,11 @@ Solver.prototype.allowedHere = function(anchor, pos, letter) {
 };
 
 Solver.prototype.gen = function(anchor, pos, result, rack, arc, firstWord, space, availableLetters) {
-    // if (space === undefined) {
-    //     space = '';
-    // } else {
-    //     space += '  ';
-    // }
+    if (space === undefined) {
+        space = '';
+    } else {
+        space += '  ';
+    }
     // log(space + 'Gen arc ' + JSON.stringify(arc) + '\n' + space + JSON.stringify(this.arcState(arc)));
     // log(space + 'rack: ' + rack);
     // log(space + 'result: ' + result);
@@ -208,18 +209,20 @@ Solver.prototype.gen = function(anchor, pos, result, rack, arc, firstWord, space
     // log(space + ' grid letter: ' + l);
     if (l === null) {
         t = this.template.letter(p.x, p.y);
-        if (t !== undefined) {
-            if (rack.indexOf(t) != -1) {
-                rack = this.rackMinus(rack, t);
-            } else if (rack.indexOf('?') != -1) {
-                rack = this.rackMinus(rack, '?');
-            } else {
-                t = null;
-            }
-        }
-
+        // log(space + ' temp letter: ' + t);
     }
     if (t !== null) {
+        if (rack.indexOf(t) != -1) {
+            rack = this.rackMinus(rack, t);
+            // log(space + 'used letter ' + t);
+        } else if (rack.indexOf('?') != -1) {
+            rack = this.rackMinus(rack, '?');
+            // log(space + 'used wild ');
+        } else {
+            // log(space + 'blocked by template');
+            //t = null;
+            return;
+        }
         var nextArc = this.nextArc(arc, t);
         this.goOn(anchor, pos, t, result, rack, nextArc, arc, firstWord, space, (availableLetters));
     } else if (l !== null) {
@@ -278,7 +281,7 @@ Solver.prototype.recordPlay = function(word, anchor, pos, rack, firstWord, avail
         return;
     }
     this.wordDict[key] = true;
-    var score = this.grid.validateMove(word, p.x, p.y, p.horizontal, firstWord, this.rack.length - rack.length);
+    var score = this.grid.validateMove(word, p.x, p.y, p.horizontal, firstWord, this.rack.length - rack.length, this.template);
     // log('Score: ' + score + ' firstWord ' + firstWord);
     if (score == -1) {
         return;
@@ -391,18 +394,18 @@ Solver.prototype.processQuery = function(query) {
     this.results = [];
     this.wordDict = {};
 
-    this.preferredMoves.forEach(function (move) {
-        var rack = this.rack.slice(0);
-        // log("Test preferred: " + move.word + " " + COLUMNS[move.col] + "," + ROWS[move.row] + (move.horizontal?'h':'v'));
-        if (!this.testPreferredMove(move, rack)) {
-            return;
-        }
-        // it works so just need to score and fix the rack
-        var anchor = new Anchor(move.col, move.row, move.horizontal);
-        // rack = this.rackMinus(rack, move.word);
-        this.recordPlay(move.word, anchor, 0, rack, firstWord, query.availableLetters);
-        // log('foreach results: ' + this.results.length);
-    }, this);
+    // this.preferredMoves.forEach(function (move) {
+    //     var rack = this.rack.slice(0);
+    //     // log("Test preferred: " + move.word + " " + COLUMNS[move.col] + "," + ROWS[move.row] + (move.horizontal?'h':'v'));
+    //     if (!this.testPreferredMove(move, rack)) {
+    //         return;
+    //     }
+    //     // it works so just need to score and fix the rack
+    //     var anchor = new Anchor(move.col, move.row, move.horizontal);
+    //     // rack = this.rackMinus(rack, move.word);
+    //     this.recordPlay(move.word, anchor, 0, rack, firstWord, query.availableLetters);
+    //     // log('foreach results: ' + this.results.length);
+    // }, this);
 
     // log("");
     // log("");
@@ -427,15 +430,15 @@ Solver.prototype.processQuery = function(query) {
     }
 
     this.results.sort(function(a,b){
-        if (a.row < b.row)
-            return 1;
-        if (b.row < a.row)
-            return -1;
-        if (a.col < b.col)
-            return 1;
-        if (b.col < a.col)
-            return -1;
-        return 0;
+        // if (a.row < b.row)
+        //     return 1;
+        // if (b.row < a.row)
+        //     return -1;
+        // if (a.col < b.col)
+        //     return 1;
+        // if (b.col < a.col)
+        //     return -1;
+        // return 0;
 
         // var al = a.word.length;
         // var bl = b.word.length;
@@ -444,11 +447,11 @@ Solver.prototype.processQuery = function(query) {
         // else if (al > bl)
         //     return 1;
 
-        // if (a.score > b.score)
-        //     return 1;
-        // else if (a.score < b.score)
-        //     return -1;
-        // return 0;
+        if (a.score > b.score)
+            return 1;
+        else if (a.score < b.score)
+            return -1;
+        return 0;
     });
 
 
@@ -509,7 +512,7 @@ Solver.prototype.processState = function(states, bestFinalState, i) {
     i++;
 
     // log("Results: " + results.length);
-    // if (i > 50)
+    if (i > 500)
         i = 0;
 
     var newStates = this.processResults(bestFinalState, i, state, results, q);
@@ -591,9 +594,8 @@ Solver.prototype.processResults = function(bestFinalState, i, state, results, q)
             newState.foundWords.push([position, result.word, result.score]);
             newState.grid.addWord(result.word, result.col, result.row, result.horizontal);
             states.push(newState);
-            newState.grid.print();
-            // return false;//c > 1;
-            process.exit();
+            // newState.grid.print();
+            // process.exit();
         }, this);
     }
 

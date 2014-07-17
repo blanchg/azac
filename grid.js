@@ -420,7 +420,7 @@ Place letters one-by-one onto the board
 Validate the “main” word and calculate the score appropriately.
 
  **/
-Grid.prototype.validateMove = function(word, col, row, horizontal, firstWord, rackUsed) {
+Grid.prototype.validateMove = function(word, col, row, horizontal, firstWord, rackUsed, template) {
 	// log('validating word ' + word);
     if (!this.fits(col, row, horizontal, word)) {
     	// log('Doesn\'t fit');
@@ -475,7 +475,12 @@ Grid.prototype.validateMove = function(word, col, row, horizontal, firstWord, ra
         if (this.lexicon !== null) {
         	// log(cellCol + ', ' + cellRow + ' ' + horizontal);
             var prefix = this.prefix(cellCol, cellRow, !horizontal);
+            if (template !== undefined && prefix === '')
+                prefix = template.prefix(cellCol, cellRow, !horizontal);
             var suffix = this.suffix(cellCol, cellRow, !horizontal);
+            if (template !== undefined && suffix === '')
+                suffix = template.suffix(cellCol, cellRow, !horizontal);
+
             // log('p ' + prefix + ' s ' + suffix);
             var altWord = prefix + letter + suffix;
             if (altWord.length > 1) {
@@ -490,6 +495,17 @@ Grid.prototype.validateMove = function(word, col, row, horizontal, firstWord, ra
                     return true;
                 }
 	        }
+            // if (template !== undefined) {
+            //     prefix = template.prefix(cellCol, cellRow, !horizontal);
+            //     suffix = template.suffix(cellCol, cellRow, !horizontal);
+            //     altWord = prefix + letter + suffix;
+            //     if (altWord.length > 1) {
+            //         if (!this.lexicon.findWord(altWord.toUpperCase())) {
+            //             // Would make a bad word with the template
+            //             return true;
+            //         }
+            //     }
+            // }
 		}
 
         // log(boardCell + ' ' + letter + ' ' + letterScore + ' * ' + letterMultiplier + ' = ' + (letterScore * letterMultiplier + altScore) + ' (' + altScore + ')');
